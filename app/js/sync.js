@@ -3,27 +3,58 @@ const path = require('path')
 const request = require('request')
 const fs = require('fs')
 
-module.exports = function (screenEid) {
+module.exports = (screenEid, syncCallback) => {
   const screenwerkApi = 'http://localhost:3000/configuration/' + screenEid
-  const loadMedias = function (schedules, callback) {
-    var mediasToLoad = async.queue(function (task, taskCallback) {
-      document.write('<p>Loading media ' + JSON.stringify(task) + '</pre>')
+
+  const loadMedias = (schedules, callback) => {
+    const queueConcurrency = 4
+
+    var bytesToSize = (bytes) => {
+      var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+      if (bytes === 0) return '0'
+      var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10)
+      var decimals = Math.max(0, i - 1)
+      return (bytes / Math.pow(1024, i)).toFixed(decimals) + ' ' + sizes[i]
+    }
+
+    var mediasToLoad = async.queue((task, taskCallback) => {
+      document.write('<ul id="' + task.eid + '"><strong>' + JSON.stringify(task) + '</strong></ul>')
 
       var tempFilePath = path.resolve(__MEDIA_DIR, task.eid.toString() + '.download')
       var filePath = path.resolve(__MEDIA_DIR, task.eid.toString())
+      var fileSize = 0
+      var downloadedSize = 0
+      var progressBar = document.createElement('div')
+      progressBar.style.width = '0%'
+      progressBar.style['background-color'] = 'cyan'
+      progressBar.style.height = '5px'
       fs.access(tempFilePath, fs.F_OK, (err) => {
         if (err) {
           fs.access(filePath, fs.F_OK, (err) => {
             if (err) {
               request(task.url)
                 .on('response', (res) => {
-                  console.log('statusCode: ', res.statusCode, 'headers: ', res.headers['content-type'])
+                  console.log(res.headers)
+                  fileSize = res.headers['content-length']
+                  var textNode = document.createTextNode(res.headers['content-type'] + ':' + bytesToSize(fileSize) + ':' + res.statusCode)
+                  var liNode = document.createElement('LI')
+                  liNode.appendChild(textNode)
+                  document.getElementById(task.eid).appendChild(liNode)
+                  document.getElementById(task.eid).appendChild(progressBar)
                 })
                 .on('error', (err) => {
                   console.log(err)
                 })
+                .on('data', (d) => {
+                  downloadedSize = downloadedSize + d.length
+                  progressBar.style.width = (downloadedSize / fileSize * 100) + '%'
+                })
                 .on('end', () => {
-                  fs.rename(tempFilePath, filePath, function () {
+                  var textNode = document.createTextNode(tempFilePath + ' ==> ' + filePath)
+                  var liNode = document.createElement('LI')
+                  liNode.appendChild(textNode)
+                  document.getElementById(task.eid).appendChild(liNode)
+                  fs.rename(tempFilePath, filePath, () => {
                     taskCallback(null)
                   })
                 })
@@ -31,18 +62,24 @@ module.exports = function (screenEid) {
 
               return
             }
-            document.write('File already there: ' + filePath)
+            var textNode = document.createTextNode('File exists: ' + filePath)
+            var liNode = document.createElement('LI')
+            liNode.appendChild(textNode)
+            document.getElementById(task.eid).appendChild(liNode)
             taskCallback(null)
           })
 
           return
         }
-        document.write('File already there: ' + tempFilePath)
+        var textNode = document.createTextNode('File already downloading: ' + tempFilePath)
+        var liNode = document.createElement('LI')
+        liNode.appendChild(textNode)
+        document.getElementById(task.eid).appendChild(liNode)
         taskCallback(null)
       })
-    }, 2)
+    }, queueConcurrency)
 
-    mediasToLoad.drain = function () {
+    mediasToLoad.drain = () => {
       document.write('<h1>all items have been processed</h1>')
       callback(null)
     }
@@ -56,13 +93,16 @@ module.exports = function (screenEid) {
           // console.log(playlistMedia)
           mediasToLoad.push(
             { eid: playlistMedia.mediaEid, url: playlistMedia.file },
-            function (err) {
+            (err) => {
               if (err) {
                 console.log(err)
                 document.write(err)
                 return
               }
-              document.write('<p>Finished load media ' + playlistMedia.file + '</pre>')
+              var textNode = document.createTextNode('Ready')
+              var liNode = document.createElement('LI')
+              liNode.appendChild(textNode)
+              document.getElementById(playlistMedia.mediaEid).appendChild(liNode)
             }
           )
         })
@@ -84,7 +124,7 @@ module.exports = function (screenEid) {
   if (!fs.existsSync(__META_DIR)) {
     fs.mkdirSync(__META_DIR)
   }
-  fs.readdirSync(__META_DIR).forEach(function (download_filename) {
+  fs.readdirSync(__META_DIR).forEach((download_filename) => {
     if (download_filename.split('.').pop() !== 'download') { return }
     console.log('Unlink ' + path.resolve(__META_DIR, download_filename))
     var result = fs.unlinkSync(path.resolve(__META_DIR, download_filename))
@@ -97,7 +137,7 @@ module.exports = function (screenEid) {
   if (!fs.existsSync(__MEDIA_DIR)) {
     fs.mkdirSync(__MEDIA_DIR)
   }
-  fs.readdirSync(__MEDIA_DIR).forEach(function (download_filename) {
+  fs.readdirSync(__MEDIA_DIR).forEach((download_filename) => {
     if (download_filename.split('.').pop() !== 'download') { return }
     console.log('Unlink ' + path.resolve(__MEDIA_DIR, download_filename))
     var result = fs.unlinkSync(path.resolve(__MEDIA_DIR, download_filename))
@@ -120,13 +160,15 @@ module.exports = function (screenEid) {
       data = data + d
     })
     .on('end', () => {
-      loadMedias(JSON.parse(data).schedules, function (err) {
+      loadMedias(JSON.parse(data).schedules, (err) => {
         if (err) {
           console.log(err)
+          syncCallback(err)
           return err
         }
-        fs.rename(tempConfFilePath, confFilePath, function () {
+        fs.rename(tempConfFilePath, confFilePath, () => {
           document.write('hurraa!')
+          syncCallback(null)
         })
       })
     })

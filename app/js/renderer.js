@@ -9,4 +9,10 @@ const path = require('path')
 const screenEid = 6534
 
 const sync = require(path.resolve(__dirname, 'sync.js'))
-sync(screenEid)
+sync(screenEid, (err) => {
+  if (err) {
+    console.log(err)
+    return
+  }
+  console.log('Synced')
+})
