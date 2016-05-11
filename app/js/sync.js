@@ -18,25 +18,21 @@ module.exports = (screenEid, syncCallback) => {
     }
 
     var mediasToLoad = async.queue((task, taskCallback) => {
-      var tempFilePath = path.resolve(__MEDIA_DIR, task.eid.toString() + '.download')
-      var filePath = path.resolve(__MEDIA_DIR, task.eid.toString())
       var fileSize = 0
       var downloadedSize = 0
-      var progressBar = document.createElement('div')
+      var progressBar = document.getElementById(task.eid + '_progress')
       progressBar.style.width = '0%'
       progressBar.style['background-color'] = 'lightgray'
       progressBar.style.height = '5px'
-      fs.access(tempFilePath, fs.F_OK, (err) => {
+      fs.access(task.tempFilePath, fs.F_OK, (err) => {
         if (err) {
-          fs.access(filePath, fs.F_OK, (err) => {
+          fs.access(task.filePath, fs.F_OK, (err) => {
             if (err) {
               request(task.url)
                 .on('response', (res) => {
                   console.log(res.headers)
                   fileSize = res.headers['content-length']
                   var textNode = document.createTextNode('; ' + bytesToSize(fileSize) + ' to download.')
-                  // var paragraphNode = document.createElement('p')
-                  // paragraphNode.appendChild(textNode)
                   document.getElementById(task.eid).appendChild(textNode)
                   document.getElementById(task.eid).appendChild(progressBar)
                 })
@@ -50,35 +46,24 @@ module.exports = (screenEid, syncCallback) => {
                 .on('end', () => {
                   progressBar.style['background-color'] = 'green'
                   progressBar.style.height = '2px'
-                  // progressBar.parentNode.removeChild(progressBar)
-                  // var textNode = document.createTextNode(tempFilePath + ' ==> ' + filePath)
-                  // var paragraphNode = document.createElement('p')
-                  // paragraphNode.appendChild(textNode)
-                  // document.getElementById(task.eid).appendChild(paragraphNode)
-                  fs.rename(tempFilePath, filePath, () => {
+                  fs.rename(task.tempFilePath, task.filePath, () => {
                     taskCallback(null)
                   })
                 })
-                .pipe(fs.createWriteStream(tempFilePath))
+                .pipe(fs.createWriteStream(task.tempFilePath))
 
               return
             }
             progressBar.style['background-color'] = 'green'
             progressBar.style.height = '20px'
             progressBar.style.width = '100%'
-            var textNode = document.createTextNode('; file exists: ' + filePath)
-            // var paragraphNode = document.createElement('p')
-            // paragraphNode.appendChild(textNode)
-            document.getElementById(task.eid).appendChild(textNode)
+            document.getElementById(task.eid).appendChild(document.createTextNode('; file exists: ' + task.filePath))
             taskCallback(null)
           })
 
           return
         }
-        var textNode = document.createTextNode('File already downloading: ' + tempFilePath)
-        var paragraphNode = document.createElement('p')
-        paragraphNode.appendChild(textNode)
-        document.getElementById(task.eid).appendChild(paragraphNode)
+        document.getElementById(task.eid).appendChild(document.createTextNode('; file already downloading: ' + task.tempFilePath))
         taskCallback(null)
       })
     }, queueConcurrency)
@@ -108,20 +93,42 @@ module.exports = (screenEid, syncCallback) => {
             downloadElement
           )
 
-          mediasToLoad.push(
-            { eid: playlistMedia.mediaEid, url: playlistMedia.file },
-            (err) => {
-              if (err) {
-                console.log(err)
-                document.body.appendChild(document.createTextNode(err))
-                return
-              }
-              // var textNode = document.createTextNode('Ready')
-              // var paragraphNode = document.createElement('p')
-              // paragraphNode.appendChild(textNode)
-              // document.getElementById(playlistMedia.mediaEid).appendChild(paragraphNode)
+          var textElement = document.createElement('div')
+          textElement.id = playlistMedia.mediaEid + '_text'
+
+          var progressBar = document.createElement('div')
+          downloadElement.appendChild(progressBar)
+          progressBar.id = playlistMedia.mediaEid + '_progress'
+          progressBar.style.width = '0%'
+          progressBar.style['background-color'] = 'lightgray'
+          progressBar.style.height = '5px'
+
+          var tempFilePath = path.resolve(__MEDIA_DIR, playlistMedia.mediaEid.toString() + '.download')
+          var filePath = path.resolve(__MEDIA_DIR, playlistMedia.mediaEid.toString())
+          fs.access(tempFilePath, fs.F_OK, (err) => {
+            if (err) { // Media file not downloading right now.
+              fs.access(filePath, fs.F_OK, (err) => {
+                if (err) { // Media file not present yet.
+                  mediasToLoad.push(
+                    { eid: playlistMedia.mediaEid, tempFilePath: tempFilePath, filePath: filePath, url: playlistMedia.file },
+                    (err) => {
+                      if (err) {
+                        console.log(err)
+                        textElement.appendChild(document.createTextNode(err))
+                      }
+                    }
+                  )
+                } else { // Media file already present.
+                  textElement.appendChild(document.createTextNode('; file exists: ' + filePath))
+                  progressBar.style['background-color'] = 'green'
+                  progressBar.style.height = '2px'
+                  progressBar.style.width = '100%'
+                }
+              })
+            } else { // Media file already downloading.
+              document.getElementById(playlistMedia.mediaEid).appendChild(document.createTextNode('; file already downloading: ' + tempFilePath))
             }
-          )
+          })
         })
       })
     })
