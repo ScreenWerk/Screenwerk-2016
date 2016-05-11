@@ -18,15 +18,13 @@ module.exports = (screenEid, syncCallback) => {
     }
 
     var mediasToLoad = async.queue((task, taskCallback) => {
-      document.write('<ul id="' + task.eid + '"><strong>' + JSON.stringify(task) + '</strong></ul>')
-
       var tempFilePath = path.resolve(__MEDIA_DIR, task.eid.toString() + '.download')
       var filePath = path.resolve(__MEDIA_DIR, task.eid.toString())
       var fileSize = 0
       var downloadedSize = 0
       var progressBar = document.createElement('div')
       progressBar.style.width = '0%'
-      progressBar.style['background-color'] = 'cyan'
+      progressBar.style['background-color'] = 'lightgray'
       progressBar.style.height = '5px'
       fs.access(tempFilePath, fs.F_OK, (err) => {
         if (err) {
@@ -36,10 +34,10 @@ module.exports = (screenEid, syncCallback) => {
                 .on('response', (res) => {
                   console.log(res.headers)
                   fileSize = res.headers['content-length']
-                  var textNode = document.createTextNode(res.headers['content-type'] + ':' + bytesToSize(fileSize) + ':' + res.statusCode)
-                  var liNode = document.createElement('LI')
-                  liNode.appendChild(textNode)
-                  document.getElementById(task.eid).appendChild(liNode)
+                  var textNode = document.createTextNode('; ' + bytesToSize(fileSize) + ' to download.')
+                  // var paragraphNode = document.createElement('p')
+                  // paragraphNode.appendChild(textNode)
+                  document.getElementById(task.eid).appendChild(textNode)
                   document.getElementById(task.eid).appendChild(progressBar)
                 })
                 .on('error', (err) => {
@@ -50,10 +48,13 @@ module.exports = (screenEid, syncCallback) => {
                   progressBar.style.width = (downloadedSize / fileSize * 100) + '%'
                 })
                 .on('end', () => {
-                  var textNode = document.createTextNode(tempFilePath + ' ==> ' + filePath)
-                  var liNode = document.createElement('LI')
-                  liNode.appendChild(textNode)
-                  document.getElementById(task.eid).appendChild(liNode)
+                  progressBar.style['background-color'] = 'green'
+                  progressBar.style.height = '2px'
+                  // progressBar.parentNode.removeChild(progressBar)
+                  // var textNode = document.createTextNode(tempFilePath + ' ==> ' + filePath)
+                  // var paragraphNode = document.createElement('p')
+                  // paragraphNode.appendChild(textNode)
+                  // document.getElementById(task.eid).appendChild(paragraphNode)
                   fs.rename(tempFilePath, filePath, () => {
                     taskCallback(null)
                   })
@@ -62,25 +63,30 @@ module.exports = (screenEid, syncCallback) => {
 
               return
             }
-            var textNode = document.createTextNode('File exists: ' + filePath)
-            var liNode = document.createElement('LI')
-            liNode.appendChild(textNode)
-            document.getElementById(task.eid).appendChild(liNode)
+            progressBar.style['background-color'] = 'green'
+            progressBar.style.height = '20px'
+            progressBar.style.width = '100%'
+            var textNode = document.createTextNode('; file exists: ' + filePath)
+            // var paragraphNode = document.createElement('p')
+            // paragraphNode.appendChild(textNode)
+            document.getElementById(task.eid).appendChild(textNode)
             taskCallback(null)
           })
 
           return
         }
         var textNode = document.createTextNode('File already downloading: ' + tempFilePath)
-        var liNode = document.createElement('LI')
-        liNode.appendChild(textNode)
-        document.getElementById(task.eid).appendChild(liNode)
+        var paragraphNode = document.createElement('p')
+        paragraphNode.appendChild(textNode)
+        document.getElementById(task.eid).appendChild(paragraphNode)
         taskCallback(null)
       })
     }, queueConcurrency)
 
     mediasToLoad.drain = () => {
-      document.write('<h1>all items have been processed</h1>')
+      document.body.appendChild(document.createElement('hr'))
+      document.body.appendChild(document.createTextNode('all items have been processed'))
+      document.body.appendChild(document.createElement('hr'))
       callback(null)
     }
 
@@ -91,18 +97,29 @@ module.exports = (screenEid, syncCallback) => {
         Object.keys(layoutPlaylist.playlistMedias).forEach((playlistMediaEid) => {
           var playlistMedia = layoutPlaylist.playlistMedias[playlistMediaEid]
           // console.log(playlistMedia)
+          var downloadElement = document.createElement('div')
+          downloadElement.appendChild(
+            document.createElement('strong').appendChild(
+              document.createTextNode(playlistMedia.mediaEid)
+            )
+          )
+          downloadElement.id = playlistMedia.mediaEid
+          document.body.appendChild(
+            downloadElement
+          )
+
           mediasToLoad.push(
             { eid: playlistMedia.mediaEid, url: playlistMedia.file },
             (err) => {
               if (err) {
                 console.log(err)
-                document.write(err)
+                document.body.appendChild(document.createTextNode(err))
                 return
               }
-              var textNode = document.createTextNode('Ready')
-              var liNode = document.createElement('LI')
-              liNode.appendChild(textNode)
-              document.getElementById(playlistMedia.mediaEid).appendChild(liNode)
+              // var textNode = document.createTextNode('Ready')
+              // var paragraphNode = document.createElement('p')
+              // paragraphNode.appendChild(textNode)
+              // document.getElementById(playlistMedia.mediaEid).appendChild(paragraphNode)
             }
           )
         })
@@ -167,7 +184,7 @@ module.exports = (screenEid, syncCallback) => {
           return err
         }
         fs.rename(tempConfFilePath, confFilePath, () => {
-          document.write('hurraa!')
+          document.body.appendChild(document.createTextNode('hurraa!'))
           syncCallback(null)
         })
       })
