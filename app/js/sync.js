@@ -4,6 +4,11 @@ const request = require('request')
 const fs = require('fs')
 
 module.exports.fetchConfiguration = (_G, callback) => {
+  if (document.getElementById('downloads') === null) {
+    let downloadDiv = document.createElement('div')
+    downloadDiv.id = 'downloads'
+    document.body.appendChild(downloadDiv)
+  }
   let data = ''
   request(_G.screenwerkApi)
     .on('response', (res) => {
@@ -19,6 +24,9 @@ module.exports.fetchConfiguration = (_G, callback) => {
       loadMedias(_G, JSON.parse(data), () => {
         fs.rename(_G.tempConfFilePath, _G.confFilePath, () => {
           callback(null)
+          while (document.getElementById('downloads').firstChild) {
+            document.getElementById('downloads').removeChild(document.getElementById('downloads').firstChild)
+          }
         })
       })
     })
@@ -87,9 +95,9 @@ const loadMedias = (_G, configuration, callback) => {
   }, queueConcurrency)
 
   mediasToLoad.drain = () => {
-    document.body.appendChild(document.createElement('hr'))
-    document.body.appendChild(document.createTextNode('all items have been processed'))
-    document.body.appendChild(document.createElement('hr'))
+    document.getElementById('downloads').appendChild(document.createElement('hr'))
+    document.getElementById('downloads').appendChild(document.createTextNode('all items have been processed'))
+    document.getElementById('downloads').appendChild(document.createElement('hr'))
     callback(null)
   }
 
@@ -100,7 +108,6 @@ const loadMedias = (_G, configuration, callback) => {
       var layoutPlaylist = schedule.layoutPlaylists[layoutPlaylistEid]
       Object.keys(layoutPlaylist.playlistMedias).forEach((playlistMediaEid) => {
         var playlistMedia = layoutPlaylist.playlistMedias[playlistMediaEid]
-        // console.log(playlistMedia)
         var downloadElement = document.createElement('div')
         downloadElement.appendChild(
           document.createElement('strong').appendChild(
@@ -108,7 +115,7 @@ const loadMedias = (_G, configuration, callback) => {
           )
         )
         downloadElement.id = playlistMedia.mediaEid
-        document.body.appendChild(
+        document.getElementById('downloads').appendChild(
           downloadElement
         )
 
