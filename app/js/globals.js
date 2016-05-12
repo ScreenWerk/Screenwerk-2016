@@ -9,9 +9,9 @@ module.exports = (screenEid) => {
   _G.packageJson = require(path.resolve(__dirname, '..', '..', 'package.json'))
 
   _G.codes = {
-    CONFIGURATION_DOWNLOAD_IN_PROGRESS: 1,
-    CONFIGURATION_NOT_PRESENT: 2,
-    CONFIGURATION_FILE_OK: 4
+    CONFIGURATION_DOWNLOAD_IN_PROGRESS: 'CONFIGURATION_DOWNLOAD_IN_PROGRESS',
+    CONFIGURATION_NOT_PRESENT: 'CONFIGURATION_NOT_PRESENT',
+    CONFIGURATION_FILE_OK: 'CONFIGURATION_FILE_OK'
   }
 
   _G.screenwerkApi = 'http://localhost:3000/configuration/' + _G.SCREEN_EID

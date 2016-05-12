@@ -102,13 +102,11 @@ const loadMedias = (_G, configuration, callback) => {
   }
 
   let schedules = configuration.schedules
-  Object.keys(schedules).forEach((scheduleEid) => {
-    var schedule = schedules[scheduleEid]
-    Object.keys(schedule.layoutPlaylists).forEach((layoutPlaylistEid) => {
-      var layoutPlaylist = schedule.layoutPlaylists[layoutPlaylistEid]
-      Object.keys(layoutPlaylist.playlistMedias).forEach((playlistMediaEid) => {
-        var playlistMedia = layoutPlaylist.playlistMedias[playlistMediaEid]
-        var downloadElement = document.createElement('div')
+
+  async.forEachOf(schedules, (schedule, scheduleEid, callback) => {
+    async.forEachOf(schedule.layoutPlaylists, (layoutPlaylist, layoutPlaylistEid, callback) => {
+      async.forEachOf(layoutPlaylist.playlistMedias, (playlistMedia, playlistMediaEid, callback) => {
+        let downloadElement = document.createElement('div')
         downloadElement.appendChild(
           document.createElement('strong').appendChild(
             document.createTextNode(playlistMedia.mediaEid)
@@ -119,18 +117,18 @@ const loadMedias = (_G, configuration, callback) => {
           downloadElement
         )
 
-        var textElement = document.createElement('div')
+        let textElement = document.createElement('div')
         textElement.id = playlistMedia.mediaEid + '_text'
 
-        var progressBar = document.createElement('div')
+        let progressBar = document.createElement('div')
         downloadElement.appendChild(progressBar)
         progressBar.id = playlistMedia.mediaEid + '_progress'
         progressBar.style.width = '0%'
         progressBar.style['background-color'] = 'lightgray'
         progressBar.style.height = '5px'
 
-        var tempFilePath = path.resolve(_G.MEDIA_DIR, playlistMedia.mediaEid.toString() + '.download')
-        var filePath = path.resolve(_G.MEDIA_DIR, playlistMedia.mediaEid.toString())
+        let tempFilePath = path.resolve(_G.MEDIA_DIR, playlistMedia.mediaEid.toString() + '.download')
+        let filePath = path.resolve(_G.MEDIA_DIR, playlistMedia.mediaEid.toString())
         fs.access(tempFilePath, fs.F_OK, (err) => {
           if (err) { // Media file not downloading right now.
             fs.access(filePath, fs.F_OK, (err) => {
@@ -142,6 +140,7 @@ const loadMedias = (_G, configuration, callback) => {
                       console.log(err)
                       textElement.appendChild(document.createTextNode(err))
                     }
+                    callback()
                   }
                 )
               } else { // Media file already present.
@@ -149,13 +148,24 @@ const loadMedias = (_G, configuration, callback) => {
                 progressBar.style['background-color'] = 'green'
                 progressBar.style.height = '2px'
                 progressBar.style.width = '100%'
+                callback()
               }
             })
           } else { // Media file already downloading.
             document.getElementById(playlistMedia.mediaEid).appendChild(document.createTextNode('; file already downloading: ' + tempFilePath))
+            callback()
           }
         })
+      }, function (err) {
+        if (err) { console.error(err.message) }
+        callback()
       })
+    }, function (err) {
+      if (err) { console.error(err.message) }
+      callback()
     })
+  }, function (err) {
+    if (err) { console.error(err.message) }
+    callback()
   })
 }

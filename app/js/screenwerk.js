@@ -12,8 +12,9 @@ const readConfiguration = (_G, callback) => {
   fs.readFile(_G.confFilePath, (err, configuration) => {
     if (!err) { // Metafile is present, media should be up to date
       return callback(_G.codes.CONFIGURATION_FILE_OK, JSON.parse(configuration))
-    } // Metafile not present for screen
+    }
 
+    // Metafile not present for screen
     setTimeout(() => { readConfiguration(_G, callback) }, 1e3)
 
     fs.access(_G.tempConfFilePath, fs.F_OK, (err) => {
@@ -32,6 +33,7 @@ readConfiguration(_G, (code, jsonData) => {
   if (code === _G.codes.CONFIGURATION_FILE_OK) {
     console.log('CONFIGURATION_FILE_OK')
     playConfiguration(_G, jsonData)
+    pollUpdates(_G)
     return
   }
   if (code === _G.codes.CONFIGURATION_DOWNLOAD_IN_PROGRESS) {
@@ -46,6 +48,9 @@ function playConfiguration (_G, configuration) {
   console.log('Lets play it!!!')
 }
 
+function pollUpdates (_G) {
+
+}
 // const doSync = (syncCallback) => {
 //   fs.access(_G.confFilePath, fs.F_OK, (err) => {
 //     if (err) { // Metafile not present for screen
