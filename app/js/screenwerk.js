@@ -21,8 +21,9 @@ const readConfiguration = (_G, callback) => {
       if (!err) { // Metafile download in progress
         return callback(_G.codes.CONFIGURATION_DOWNLOAD_IN_PROGRESS)
       }
-      sync.fetchConfiguration(_G, (err) => {
+      sync.fetchConfiguration(_G, (err, code) => {
         if (err) { console.log(err) }
+        console.log('fetchConfiguration returned with', code)
       })
       return callback(_G.codes.CONFIGURATION_NOT_PRESENT)
     })
@@ -30,8 +31,8 @@ const readConfiguration = (_G, callback) => {
 }
 
 readConfiguration(_G, (code, jsonData) => {
+  console.log('readConfiguration', code)
   if (code === _G.codes.CONFIGURATION_FILE_OK) {
-    console.log('CONFIGURATION_FILE_OK')
     playConfiguration(_G, jsonData)
     pollUpdates(_G)
     return
@@ -45,46 +46,24 @@ readConfiguration(_G, (code, jsonData) => {
 })
 
 function playConfiguration (_G, configuration) {
-  console.log('Lets play it!!!')
+  document.getElementById('lastUpdatedAt').innerHTML = new Date(configuration.lastPoll).toString()
+  console.log('Lets play it!!!', configuration.lastPoll)
 }
 
 function pollUpdates (_G) {
-
+  // console.log('start polling')
+  sync.fetchConfiguration(_G, (err, code) => {
+    if (err) { console.log(err) }
+    console.log('fetchConfiguration returned with', code)
+    if (code === _G.codes.CONFIGURATION_UPDATED) {
+      fs.readFile(_G.confFilePath, (err, configuration) => {
+        if (err) { console.log(err) }
+        playConfiguration(_G, JSON.parse(configuration))
+      })
+    }
+    // console.log('poll finished')
+    setTimeout(function () {
+      pollUpdates(_G)
+    }, 1e3)
+  })
 }
-// const doSync = (syncCallback) => {
-//   fs.access(_G.confFilePath, fs.F_OK, (err) => {
-//     if (err) { // Metafile not present for screen
-//       fs.access(_G.tempConfFilePath, fs.F_OK, (err) => {
-//         if (err) { // Metafile not downloading either.
-//           syncCallback(null, null, null) // Execute download immediately
-//         } else { // Media downloading in progress
-//           let message = 'Media downloading in progress'
-//           console.log(message)
-//           syncCallback(null, message, 60e3) // Try download again in a minute
-//         }
-//       })
-//     } else { // Metafile is present, media should be up to date
-//       let message = 'Metafile is present, media should be up to date'
-//       console.log(message)
-//       syncCallback(message)
-//     }
-//   })
-//   syncCallback(null)
-// }
-//
-// doSync((err, message, timeoutMs) => {
-//   if (err) {
-//     return console.log(err)
-//   }
-//   if (message) {
-//     return console.log(message)
-//   }
-//   setTimeout(() => {
-//     sync(_G, (err) => {
-//       if (err) {
-//         return console.log(err)
-//       }
-//       console.log('Synced')
-//     })
-//   }, timeoutMs ? timeoutMs : 1)
-// })

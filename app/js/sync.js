@@ -9,10 +9,15 @@ module.exports.fetchConfiguration = (_G, callback) => {
     downloadDiv.id = 'downloads'
     document.body.appendChild(downloadDiv)
   }
+
+  fs.readFile(_G.confFilePath, (err, configuration) => {
+    _G.configurationTs = err ? 0 : (new Date(JSON.parse(configuration).lastPoll)).getTime()
+  })
+
   let data = ''
-  request(_G.screenwerkApi)
+  request(_G.SCREENWERK_API)
     .on('response', (res) => {
-      console.log('statusCode: ', res.statusCode, 'headers: ', res.headers)
+      // console.log('statusCode: ', res.statusCode, 'headers: ', res.headers)
     })
     .on('error', (err) => {
       callback(err)
@@ -21,14 +26,34 @@ module.exports.fetchConfiguration = (_G, callback) => {
       data = data + d
     })
     .on('end', () => {
-      loadMedias(_G, JSON.parse(data), () => {
-        fs.rename(_G.tempConfFilePath, _G.confFilePath, () => {
-          callback(null)
-          while (document.getElementById('downloads').firstChild) {
-            document.getElementById('downloads').removeChild(document.getElementById('downloads').firstChild)
-          }
+      let jsonData = JSON.parse(data)
+      let lastPollTs = new Date(jsonData.lastPoll).getTime()
+      if (lastPollTs === _G.configurationTs) {
+        console.log('no updates')
+        fs.unlink(_G.tempConfFilePath, () => {
+          callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })
-      })
+      } else {
+        console.log('got updates')
+        _G.configurationTs = lastPollTs
+        loadMedias(_G, jsonData, () => {
+          fs.rename(_G.tempConfFilePath, _G.confFilePath, () => {
+            async.whilst(
+              () => { return document.getElementById('downloads').hasChildNodes() },
+              (callback) => {
+                setTimeout(function () {
+                  document.getElementById('downloads').removeChild(document.getElementById('downloads').lastChild)
+                  callback(null)
+                }, 100)
+              },
+              (err) => {
+                if (err) console.log(err)
+                callback(null, _G.codes.CONFIGURATION_UPDATED)
+              }
+            )
+          })
+        })
+      }
     })
     .pipe(fs.createWriteStream(_G.tempConfFilePath))
 }
