@@ -29,7 +29,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
       let jsonData = JSON.parse(data)
       let lastPollTs = new Date(jsonData.lastPoll).getTime()
       if (lastPollTs === _G.configurationTs) {
-        console.log('no updates')
+        // console.log('no updates')
         fs.unlink(_G.tempConfFilePath, () => {
           callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })

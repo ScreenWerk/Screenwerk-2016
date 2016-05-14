@@ -4,7 +4,7 @@
 const path = require('path')
 const fs = require('fs')
 
-let _G = require(path.resolve(__dirname, 'globals.js'))(6534) // Globals. Paths, screenEid, etc.
+let _G = require(path.resolve(__dirname, 'globals.js'))(75) // Globals. Paths, screenEid, etc.
 
 const sync = require(path.resolve(__dirname, 'sync.js'))
 
@@ -48,13 +48,21 @@ readConfiguration(_G, (code, jsonData) => {
 function playConfiguration (_G, configuration) {
   document.getElementById('lastUpdatedAt').innerHTML = new Date(configuration.lastPoll).toString()
   console.log('Lets play it!!!', configuration.lastPoll)
+  require(path.resolve(__dirname, 'renderDom.js')).render(_G, configuration, (err, code) => {
+    if (err) { console.log(err) }
+    console.log('renderer returned with code: ', code)
+    require(path.resolve(__dirname, 'player.js')).play(_G, configuration, (err, code) => {
+      if (err) { console.log(err) }
+      console.log('player returned with code: ', code)
+    })
+  })
 }
 
 function pollUpdates (_G) {
   // console.log('start polling')
   sync.fetchConfiguration(_G, (err, code) => {
     if (err) { console.log(err) }
-    console.log('fetchConfiguration returned with', code)
+    // console.log('fetchConfiguration returned with', code)
     if (code === _G.codes.CONFIGURATION_UPDATED) {
       fs.readFile(_G.confFilePath, (err, configuration) => {
         if (err) { console.log(err) }
@@ -64,6 +72,6 @@ function pollUpdates (_G) {
     // console.log('poll finished')
     setTimeout(function () {
       pollUpdates(_G)
-    }, 1e3)
+    }, 10e3)
   })
 }

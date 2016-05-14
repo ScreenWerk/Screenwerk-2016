@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "async": "^2.0.0-rc.4",
+    "later": "^1.2.0",
     "request": "^2.72.0"
   }
 }

@@ -8,6 +8,38 @@
         margin: 0px;
         padding: 0px;
       }
+      .screen {
+        width: 300px;
+        height: 200px;
+        position: relative;
+        bottom: 0px;
+        right: 0px;
+        border: gray 2px solid;
+        border-radius: 10px;
+      }
+      .layout {
+        position: absolute;
+        border: red 2px solid;
+        border-radius: 8px;
+        width: 100%;
+        height: 100%;
+      }
+      .playlist {
+        position: relative;
+        border: green 2px solid;
+        border-radius: 6px;
+      }
+      .media {
+        position: absolute;
+        border: blue 2px solid;
+        border-radius: 4px;
+        width: 100%;
+        height: 100%;
+      }
+      .media video, .media img, .media iframe {
+        width: 100%;
+        height: 100%;
+      }
     </style>
   </head>
   <body>
@@ -17,6 +49,7 @@
     and Electron <script>document.write(process.versions.electron)</script>.
     Configuration updated at <span id="lastUpdatedAt"></span>
     <hr/>
+    <pre id="player"></pre>
   </body>
 
   <script>
