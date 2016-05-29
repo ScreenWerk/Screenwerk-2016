@@ -11,11 +11,16 @@ module.exports.fetchConfiguration = (_G, callback) => {
   }
 
   fs.readFile(_G.confFilePath, (err, configuration) => {
-    _G.configurationTs = err ? 0 : (new Date(JSON.parse(configuration).lastPoll)).getTime()
-  })
+    if (err) {
+      console.log(err)
+    }
+    else {
+      _G.configurationTs = (new Date(JSON.parse(configuration).publishedAt)).getTime()
+      // console.log(_G.configurationTs)
+    }
 
-  let data = ''
-  request(_G.SCREENWERK_API)
+    let data = ''
+    request(_G.SCREENWERK_API)
     .on('response', (res) => {
       // console.log('statusCode: ', res.statusCode, 'headers: ', res.headers)
     })
@@ -26,23 +31,27 @@ module.exports.fetchConfiguration = (_G, callback) => {
       data = data + d
     })
     .on('end', () => {
-      let jsonData = JSON.parse(data)
-      let lastPollTs = new Date(jsonData.lastPoll).getTime()
-      if (lastPollTs === _G.configurationTs) {
-        // console.log('no updates')
+      let configuration = JSON.parse(data)
+      let configurationTs = new Date(configuration.publishedAt).getTime()
+      if (configurationTs === _G.configurationTs) {
+        console.log('no updates')
         fs.unlink(_G.tempConfFilePath, () => {
           callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })
       } else {
         console.log('got updates')
-        _G.configurationTs = lastPollTs
-        loadMedias(_G, jsonData, () => {
-          fs.rename(_G.tempConfFilePath, _G.confFilePath, () => {
+        console.log('_G.configurationTs = configurationTs: ' + _G.configurationTs + ' = ' + configurationTs)
+        _G.configurationTs = configurationTs
+        loadMedias(_G, configuration, () => {
+          fs.writeFileSync(_G.confFilePath, JSON.stringify(configuration, null, 2))
+          fs.unlink(_G.tempConfFilePath, () => {
             async.whilst(
               () => { return document.getElementById('downloads').hasChildNodes() },
               (callback) => {
                 setTimeout(function () {
-                  document.getElementById('downloads').removeChild(document.getElementById('downloads').lastChild)
+                  if (document.getElementById('downloads').childNodes.length) {
+                    document.getElementById('downloads').removeChild(document.getElementById('downloads').lastChild)
+                  }
                   callback(null)
                 }, 100)
               },
@@ -56,6 +65,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
       }
     })
     .pipe(fs.createWriteStream(_G.tempConfFilePath))
+  })
 }
 
 const loadMedias = (_G, configuration, callback) => {
@@ -126,11 +136,9 @@ const loadMedias = (_G, configuration, callback) => {
     callback(null)
   }
 
-  let schedules = configuration.schedules
-
-  async.forEachOf(schedules, (schedule, scheduleEid, callback) => {
-    async.forEachOf(schedule.layoutPlaylists, (layoutPlaylist, layoutPlaylistEid, callback) => {
-      async.forEachOf(layoutPlaylist.playlistMedias, (playlistMedia, playlistMediaEid, callback) => {
+  async.each(configuration.schedules, (schedule, callback) => {
+    async.each(schedule.layoutPlaylists, (layoutPlaylist, callback) => {
+      async.each(layoutPlaylist.playlistMedias, (playlistMedia, callback) => {
         let downloadElement = document.createElement('div')
         downloadElement.appendChild(
           document.createElement('strong').appendChild(

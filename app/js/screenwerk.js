@@ -4,7 +4,7 @@
 const path = require('path')
 const fs = require('fs')
 
-let _G = require(path.resolve(__dirname, 'globals.js'))(75) // Globals. Paths, screenEid, etc.
+let _G = require(path.resolve(__dirname, 'globals.js'))(7054) // Globals. Paths, screenEid, etc.
 
 const sync = require(path.resolve(__dirname, 'sync.js'))
 
@@ -31,7 +31,7 @@ const readConfiguration = (_G, callback) => {
 }
 
 readConfiguration(_G, (code, jsonData) => {
-  console.log('readConfiguration', code)
+  // console.log('readConfiguration', code)
   if (code === _G.codes.CONFIGURATION_FILE_OK) {
     playConfiguration(_G, jsonData)
     pollUpdates(_G)
@@ -46,8 +46,8 @@ readConfiguration(_G, (code, jsonData) => {
 })
 
 function playConfiguration (_G, configuration) {
-  document.getElementById('lastUpdatedAt').innerHTML = new Date(configuration.lastPoll).toString()
-  console.log('Lets play it!!!', configuration.lastPoll)
+  document.getElementById('lastUpdatedAt').innerHTML = new Date(configuration.publishedAt).toString()
+  console.log('Lets play it!!!', configuration.publishedAt)
   require(path.resolve(__dirname, 'renderDom.js')).render(_G, configuration, (err, code) => {
     if (err) { console.log(err) }
     console.log('renderer returned with code: ', code)

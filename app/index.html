@@ -2,36 +2,36 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Hello World!</title>
+    <title>Screenwerk 2016</title>
     <style>
       body, p, div, * {
         margin: 0px;
         padding: 0px;
       }
+      .sysinfo, .configuration {
+        display: none;
+      }
       .screen {
-        width: 300px;
-        height: 200px;
-        position: relative;
-        bottom: 0px;
-        right: 0px;
-        border: gray 2px solid;
+        width: 100%;
+        height: 100%;
+        border: gray 0px solid;
         border-radius: 10px;
       }
       .layout {
         position: absolute;
-        border: red 2px solid;
+        border: red 0px solid;
         border-radius: 8px;
         width: 100%;
         height: 100%;
       }
       .playlist {
         position: relative;
-        border: green 2px solid;
+        border: green 0px solid;
         border-radius: 6px;
       }
       .media {
         position: absolute;
-        border: blue 2px solid;
+        border: blue 0px solid;
         border-radius: 4px;
         width: 100%;
         height: 100%;
@@ -44,12 +44,13 @@
   </head>
   <body>
     <!-- All of the Node.js APIs are available in this renderer process. -->
-    Node <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
-    Configuration updated at <span id="lastUpdatedAt"></span>
-    <hr/>
-    <pre id="player"></pre>
+    <div class="sysinfo">
+      Node <script>document.write(process.versions.node)</script>,
+      Chromium <script>document.write(process.versions.chrome)</script>,
+      and Electron <script>document.write(process.versions.electron)</script>.
+      Configuration updated at <span id="lastUpdatedAt"></span>
+    </div>
+    <div id="player"></div>
   </body>
 
   <script>

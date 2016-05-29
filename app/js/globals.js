@@ -17,7 +17,8 @@ module.exports = (screenEid) => {
     DOM_RENDERED: 'DOM_RENDERED',
     MEDIA_TYPE_URL: 'URL',
     MEDIA_TYPE_IMAGE: 'Image',
-    MEDIA_TYPE_VIDEO: 'Video'
+    MEDIA_TYPE_VIDEO: 'Video',
+    MEDIA_TYPE_AUDIO: 'Audio'
   }
 
   _G.SCREENWERK_API = 'http://localhost:3000/configuration/' + _G.SCREEN_EID
