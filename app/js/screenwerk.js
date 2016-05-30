@@ -3,9 +3,7 @@
 // All of the Node.js APIs are available in this process.
 const path = require('path')
 const fs = require('fs')
-const remote = require('remote')
-const mainWindow = remote.getCurrentWindow()
-
+const {mainWindow} = require('electron')
 
 if (!process.env.SCREEN) {
   console.error('"SCREEN" missing in environment')

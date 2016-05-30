@@ -1,8 +1,6 @@
 const async = require('async')
 const path = require('path')
-// const fs = require('fs')
 const later = require('later')
-// var events = require('events')
 
 const getOrderedSchedules = (schedules) => {
   return Object.keys(schedules)
@@ -17,17 +15,6 @@ const getOrderedSchedules = (schedules) => {
       console.log(schedules[a].prev)
       return schedules[a]
     })
-
-  // let currentSchedule = schedules[Object.keys(schedules)[0]]
-  // Object.keys(schedules).forEach((a) => {
-  //   let crtab = schedules[a].crontab
-  //   let sched = later.parse.cron(crtab)
-  //   schedules[a].prev = new Date(later.schedule(sched).prev().getTime())
-  //   if (currentSchedule.prev < schedules[a].prev) {
-  //     currentSchedule = schedules[a]
-  //   }
-  // })
-  // return currentSchedule
 }
 
 const getNextSchedule = (schedules) => {
@@ -52,6 +39,11 @@ module.exports.render = (_G, configuration, mainCallback) => {
   playerRootNode.className = 'screen'
   document.getElementById('player').appendChild(playerRootNode)
 
+  playerRootNode.stopPlayback = function () {
+    console.log('Stop all')
+    Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
+  }
+
   let configurationNode = document.createElement('pre')
   configurationNode.className = 'configuration'
   configurationNode.innerHTML = JSON.stringify(configuration, null, 4)
@@ -74,6 +66,9 @@ module.exports.render = (_G, configuration, mainCallback) => {
     }
 
     layoutNode.startPlayback = function () { // this === layoutNode
+      if (schedule.cleanup === "True") {
+        playerRootNode.stopPlayback()
+      }
       let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
       console.log('Start layout ' + layoutNode.id, 'Play for ' + (nextSchedule.next - new Date()) + ' ms.')
       Array.from(this.childNodes).forEach((a) => {
@@ -215,9 +210,9 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
       if (swMedia.duration) {
         setTimeout(function () {
           console.log('mediaNode.stopPlayback() from "image ended" event.', swMedia)
-          // mediaNode.stopPlayback()
+          mediaNode.stopPlayback()
           setTimeout(function () {
-            // mediaNode.nextMediaNode.startPlayback()
+            mediaNode.nextMediaNode.startPlayback()
           }, swMedia.delay * 1e3)
         }, swMedia.duration * 1e3)
       }

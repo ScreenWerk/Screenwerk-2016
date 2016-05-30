@@ -2,8 +2,6 @@ const async = require('async')
 const path = require('path')
 const request = require('request')
 const fs = require('fs')
-const remote = require('remote')
-const mainWindow = remote.getCurrentWindow()
 
 module.exports.fetchConfiguration = (_G, callback) => {
   if (document.getElementById('downloads') === null) {

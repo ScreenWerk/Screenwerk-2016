@@ -16,9 +16,13 @@
       "remoteToken": ""
     }
   },
-  "dependencies": {
-    "async": "^2.0.0-rc.5",
-    "later": "^1.2.0",
-    "request": "^2.72.0"
+  "devDependencies": {
+    "electron-prebuilt": "^1.2.0"
+  },
+  "scripts": {
+    "postinstall": "install-app-deps",
+    "pack": "build --target dir",
+    "dist": "build",
+    "start": "electron app/main.js"
   }
 }

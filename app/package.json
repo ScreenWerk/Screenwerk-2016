@@ -21,8 +21,7 @@
   },
   "homepage": "https://github.com/mitselek/Screenwerk-2016#readme",
   "devDependencies": {
-    "angular-mocks": "^1.5.6",
-    "electron-prebuilt": "^0.37.8"
+    "electron-prebuilt": "^1.2.0"
   },
   "dependencies": {
     "async": "^2.0.0-rc.5",
