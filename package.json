@@ -1,5 +1,6 @@
 {
   "name": "Screenwerk2016",
+  "productName": "Screenwerk 2016",
   "version": "0.1.0",
   "description": "Screenwerk2016",
   "author": "Mihkel Putrinš",
@@ -9,7 +10,10 @@
     "app-bundle-id": "your.id",
     "app-category-type": "your.app.category.type",
     "win": {
-      "iconUrl": "https://raw.githubusercontent.com/mitselek/Screenwerk-2016/master/app/sw-p512.png"
+      "iconUrl": "https://raw.githubusercontent.com/mitselek/Screenwerk-2016/master/build/icon.ico",
+      "msi": false,
+      "remoteReleases": "",
+      "remoteToken": ""
     }
   },
   "dependencies": {
