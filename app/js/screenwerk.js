@@ -3,8 +3,16 @@
 // All of the Node.js APIs are available in this process.
 const path = require('path')
 const fs = require('fs')
+const remote = require('remote')
+const mainWindow = remote.getCurrentWindow()
 
-let _G = require(path.resolve(__dirname, 'globals.js'))(7054) // Globals. Paths, screenEid, etc.
+
+if (!process.env.SCREEN) {
+  console.error('"SCREEN" missing in environment')
+  window.alert('"SCREEN" missing in environment')
+  mainWindow.close()
+}
+let _G = require(path.resolve(__dirname, 'globals.js'))(process.env.SCREEN) // Globals. Paths, screenEid, etc.
 
 const sync = require(path.resolve(__dirname, 'sync.js'))
 
@@ -22,10 +30,13 @@ const readConfiguration = (_G, callback) => {
         return callback(_G.codes.CONFIGURATION_DOWNLOAD_IN_PROGRESS)
       }
       sync.fetchConfiguration(_G, (err, code) => {
-        if (err) { console.log(err) }
-        console.log('fetchConfiguration returned with', code)
+        if (err) {
+          console.log(err)
+        }
+        // console.log('fetchConfiguration returned with', code)
+        return callback(code)
       })
-      return callback(_G.codes.CONFIGURATION_NOT_PRESENT)
+      return callback(_G.codes.CONFIGURATION_FILE_NOT_PRESENT)
     })
   })
 }
@@ -35,14 +46,9 @@ readConfiguration(_G, (code, jsonData) => {
   if (code === _G.codes.CONFIGURATION_FILE_OK) {
     playConfiguration(_G, jsonData)
     pollUpdates(_G)
-    return
+    return console.info(code)
   }
-  if (code === _G.codes.CONFIGURATION_DOWNLOAD_IN_PROGRESS) {
-    return console.log('CONFIGURATION_DOWNLOAD_IN_PROGRESS')
-  }
-  if (code === _G.codes.CONFIGURATION_NOT_PRESENT) {
-    return console.log('CONFIGURATION_NOT_PRESENT')
-  }
+  return console.info(code)
 })
 
 function playConfiguration (_G, configuration) {

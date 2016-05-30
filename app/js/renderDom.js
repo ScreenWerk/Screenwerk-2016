@@ -4,17 +4,30 @@ const path = require('path')
 const later = require('later')
 // var events = require('events')
 
-const getCurrentSchedule = (schedules) => {
-  let currentSchedule = schedules[Object.keys(schedules)[0]]
-  Object.keys(schedules).forEach((a) => {
-    let crtab = schedules[a].crontab
-    let sched = later.parse.cron(crtab)
-    schedules[a].prev = new Date(later.schedule(sched).prev().getTime())
-    if (currentSchedule.prev < schedules[a].prev) {
-      currentSchedule = schedules[a]
-    }
-  })
-  return currentSchedule
+const getOrderedSchedules = (schedules) => {
+  return Object.keys(schedules)
+    .sort((a, b) => {
+      let sched_a = later.parse.cron(schedules[a].crontab)
+      let sched_b = later.parse.cron(schedules[b].crontab)
+      schedules[a].prev = new Date(later.schedule(sched_a).prev().getTime())
+      schedules[b].prev = new Date(later.schedule(sched_b).prev().getTime())
+      return schedules[a].prev > schedules[b].prev
+    })
+    .map((a) => {
+      console.log(schedules[a].prev)
+      return schedules[a]
+    })
+
+  // let currentSchedule = schedules[Object.keys(schedules)[0]]
+  // Object.keys(schedules).forEach((a) => {
+  //   let crtab = schedules[a].crontab
+  //   let sched = later.parse.cron(crtab)
+  //   schedules[a].prev = new Date(later.schedule(sched).prev().getTime())
+  //   if (currentSchedule.prev < schedules[a].prev) {
+  //     currentSchedule = schedules[a]
+  //   }
+  // })
+  // return currentSchedule
 }
 
 const getNextSchedule = (schedules) => {
@@ -63,7 +76,10 @@ module.exports.render = (_G, configuration, mainCallback) => {
     layoutNode.startPlayback = function () { // this === layoutNode
       let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
       console.log('Start layout ' + layoutNode.id, 'Play for ' + (nextSchedule.next - new Date()) + ' ms.')
-      Array.from(this.childNodes).forEach((a) => { a.startPlayback() })
+      Array.from(this.childNodes).forEach((a) => {
+        console.log(a)
+        a.startPlayback()
+      })
       let self = this
       setTimeout(() => {
         nextSchedule.layoutNode.startPlayback()
@@ -145,7 +161,10 @@ module.exports.render = (_G, configuration, mainCallback) => {
     if (err) { console.error(err.message) }
     mainCallback(null, _G.codes.DOM_RENDERED)
     console.log(_G.codes.DOM_RENDERED)
-    getCurrentSchedule(configuration.schedules).layoutNode.startPlayback()
+    getOrderedSchedules(configuration.schedules)
+      .forEach((a) => {
+        a.layoutNode.startPlayback()
+      })
   })
 }
 

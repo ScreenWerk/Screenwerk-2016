@@ -2,6 +2,8 @@ const async = require('async')
 const path = require('path')
 const request = require('request')
 const fs = require('fs')
+const remote = require('remote')
+const mainWindow = remote.getCurrentWindow()
 
 module.exports.fetchConfiguration = (_G, callback) => {
   if (document.getElementById('downloads') === null) {
@@ -12,7 +14,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
 
   fs.readFile(_G.confFilePath, (err, configuration) => {
     if (err) {
-      console.log(err)
+      // console.log(err)
     }
     else {
       _G.configurationTs = (new Date(JSON.parse(configuration).publishedAt)).getTime()
@@ -20,11 +22,18 @@ module.exports.fetchConfiguration = (_G, callback) => {
     }
 
     let data = ''
+    // console.log('Requesting ' + _G.SCREENWERK_API)
     request(_G.SCREENWERK_API)
     .on('response', (res) => {
-      // console.log('statusCode: ', res.statusCode, 'headers: ', res.headers)
+      if (res.statusCode !== 200) {
+        console.error('statusCode: ', res.statusCode, 'headers: ', res.headers)
+      }
+      else {
+        // console.info('statusCode: ', res.statusCode, 'headers: ', res.headers)
+      }
     })
     .on('error', (err) => {
+      console.error('ERROR:', err)
       callback(err)
     })
     .on('data', (d) => {
@@ -32,10 +41,25 @@ module.exports.fetchConfiguration = (_G, callback) => {
     })
     .on('end', () => {
       let configuration = JSON.parse(data)
+      if (configuration.error) {
+        // window.alert(data)
+        fs.unlink(_G.tempConfFilePath, () => {
+          if (configuration.error.code === 401) {
+            // console.info('INFO:', data)
+            callback(configuration.error, _G.codes.CONFIGURATION_NOT_AVAILABLE_YET)
+          }
+          else {
+            console.error('ERROR:', data)
+            callback(configuration.error, _G.codes.CONFIGURATION_FETCH_FAILED)
+          }
+        })
+        return
+      }
+      // console.info('INFO:', data)
       let configurationTs = new Date(configuration.publishedAt).getTime()
       if (configurationTs === _G.configurationTs) {
-        console.log('no updates')
         fs.unlink(_G.tempConfFilePath, () => {
+          // console.log(_G.codes.CONFIGURATION_NOT_UPDATED)
           callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })
       } else {

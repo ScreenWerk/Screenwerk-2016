@@ -30,6 +30,12 @@ const getNextSchedule = (schedules) => {
 }
 
 module.exports.play = (_G, configuration, mainCallback) => {
+  if (!configuration) {
+    throw new Error('Cant play without configuration!')
+  }
+  if (!configuration.schedules) {
+    throw new Error('Cant play without schedules!')
+  }
   console.log('currentSchedule: ' + getCurrentSchedule(configuration.schedules).eid + ' nextSchedule: ' + getNextSchedule(configuration.schedules).eid + ' at ' + getNextSchedule(configuration.schedules).next)
   playSchedule(_G, configuration, (err) => {
     if (err) { mainCallback(err) }
