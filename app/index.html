@@ -4,12 +4,18 @@
     <meta charset="UTF-8">
     <title>Screenwerk 2016</title>
     <style>
+      body {
+        background-color: indigo;
+      }
+      pre {
+        color: yellow;
+      }
       body, p, div, * {
         margin: 0px;
         padding: 0px;
       }
       .sysinfo, .configuration {
-        display: none;
+        display: block;
       }
       .screen {
         width: 100%;
@@ -25,7 +31,7 @@
         height: 100%;
       }
       .playlist {
-        position: relative;
+        position: absolute;
         border: green 0px solid;
         border-radius: 6px;
       }
@@ -44,12 +50,8 @@
   </head>
   <body>
     <!-- All of the Node.js APIs are available in this renderer process. -->
-    <div class="sysinfo">
-      Node <script>document.write(process.versions.node)</script>,
-      Chromium <script>document.write(process.versions.chrome)</script>,
-      and Electron <script>document.write(process.versions.electron)</script>.
-      Configuration updated at <span id="lastUpdatedAt"></span>
-    </div>
+    <pre class="sysinfo">
+Node <script>document.write(process.versions.node)</script> | Chromium <script>document.write(process.versions.chrome)</script> | Electron <script>document.write(process.versions.electron)</script> | Configuration updated at <span id="lastUpdatedAt"></span></pre>
     <div id="player"></div>
   </body>
 

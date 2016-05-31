@@ -66,7 +66,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
     }
 
     layoutNode.startPlayback = function () { // this === layoutNode
-      if (schedule.cleanup === "True") {
+      if (schedule.cleanup) {
         playerRootNode.stopPlayback()
       }
       let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
@@ -90,10 +90,18 @@ module.exports.render = (_G, configuration, mainCallback) => {
       layoutNode.appendChild(playlistNode)
       playlistNode.id = playlistNode.parentNode.id + '.' + playlist.playlistEid
       playlistNode.className = 'playlist'
-      playlistNode.style.top = playlist.top + '%'
-      playlistNode.style.left = playlist.left + '%'
-      playlistNode.style.width = playlist.width + '%'
-      playlistNode.style.height = playlist.height + '%'
+      if (playlist.inPixels) {
+        playlistNode.style.top = (playlist.top / schedule.height * 100) + '%'
+        playlistNode.style.left = (playlist.left / schedule.width * 100) + '%'
+        playlistNode.style.width = (playlist.width / schedule.width * 100) + '%'
+        playlistNode.style.height = (playlist.height / schedule.height * 100) + '%'
+      }
+      else {
+        playlistNode.style.top = playlist.top + '%'
+        playlistNode.style.left = playlist.left + '%'
+        playlistNode.style.width = playlist.width + '%'
+        playlistNode.style.height = playlist.height + '%'
+      }
 
       playlistNode.stopPlayback = function () {
         console.log('Stop playlist ' + playlistNode.id)
@@ -175,7 +183,7 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.overflow = 'hidden'
     mediaDomElement.autoplay = false
     mediaDomElement.controls = true
-    mediaDomElement.muted = (swMedia.mute && swMedia.mute === 'True')
+    mediaDomElement.muted = swMedia.mute
     mediaNode.appendChild(mediaDomElement)
     mediaDomElement.id = mediaNode.id + '.video'
     mediaDomElement.addEventListener('ended', () => {
@@ -207,6 +215,7 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     // Properties and methods not present natively
     // mediaDomElement.currentTime = 0
     mediaDomElement.play = () => {
+      // If duration is not set, the image will stay on screen until playlist gets cleaned
       if (swMedia.duration) {
         setTimeout(function () {
           console.log('mediaNode.stopPlayback() from "image ended" event.', swMedia)
