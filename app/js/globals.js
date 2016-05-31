@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs')
+const YAML = require('yamljs')
 
 // Initialise globals, sanity check filesystem
 module.exports = (screenEid) => {
@@ -22,8 +23,6 @@ module.exports = (screenEid) => {
     MEDIA_TYPE_VIDEO: 'Video',
     MEDIA_TYPE_AUDIO: 'Audio'
   }
-
-  _G.SCREENWERK_API = 'https://swpublisher.entu.eu/configuration/' + _G.SCREEN_EID
 
   _G.HOME_PATH = path.resolve(
     process.env.HOME
@@ -61,8 +60,36 @@ module.exports = (screenEid) => {
     }
   })
 
+  _G.credentialsFilePath = path.resolve(_G.HOME_PATH, 'screen.yml')
+  if (process.env.SCREEN_EID && process.env.SCREEN_KEY) {
+    _G.SCREEN_EID = process.env.SCREEN_EID
+    _G.SCREEN_KEY = process.env.SCREEN_KEY
+    let credentials = YAML.stringify({ SCREEN_EID: _G.SCREEN_EID, SCREEN_KEY: _G.SCREEN_KEY }, 4)
+    fs.writeFileSync(_G.credentialsFilePath, credentials)
+  }
+
+  try {
+    fs.accessSync(_G.credentialsFilePath, fs.R_OK)
+  }
+  catch (e) {
+    throw (e)
+    // throw new Error('Credentials file not accessible!')
+  }
+
+  try {
+    let data = fs.readFileSync(_G.credentialsFilePath, 'utf8')
+    console.log(data)
+    let credentials = YAML.parse(data)
+    console.log(credentials)
+    _G.SCREEN_EID = credentials.SCREEN_EID
+    _G.SCREEN_KEY = credentials.SCREEN_KEY
+  }
+  catch (e) {
+    throw new Error('Credentials file corrupted!')
+  }
   _G.tempConfFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json.download')
   _G.confFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json')
+  _G.SCREENWERK_API = 'https://swpublisher.entu.eu/configuration/' + _G.SCREEN_EID
 
   return _G
 }

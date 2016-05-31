@@ -3,14 +3,8 @@
 // All of the Node.js APIs are available in this process.
 const path = require('path')
 const fs = require('fs')
-const {mainWindow} = require('electron')
 
-if (!process.env.SCREEN) {
-  console.error('"SCREEN" missing in environment')
-  window.alert('"SCREEN" missing in environment')
-  mainWindow.close()
-}
-let _G = require(path.resolve(__dirname, 'globals.js'))(process.env.SCREEN) // Globals. Paths, screenEid, etc.
+let _G = require(path.resolve(__dirname, 'globals.js'))() // Globals. Paths, screenEid, etc.
 
 const sync = require(path.resolve(__dirname, 'sync.js'))
 
