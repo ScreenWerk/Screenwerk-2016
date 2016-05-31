@@ -3,11 +3,10 @@
 1. clone the code
 2. cd app
 3. npm install
-4. [SCREEN_EID=2670 ]npm start
+4. [SCREEN_EID=6534 ]npm start
 
 * On first run, start the player with  
-SCREEN_EID=2670 npm start
-
-Later on provide SCREEN_EID environment variable only if changing the screen.
+`SCREEN_EID=6534 npm start`  
+later on `npm start` is sufficient. Provide SCREEN_EID environment variable only if changing the screen.
 
 Screen credentials are stored in .../home/screen.yml - you can always update the contents manually, also.
