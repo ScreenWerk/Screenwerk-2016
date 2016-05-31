@@ -61,9 +61,10 @@ module.exports = (screenEid) => {
   })
 
   _G.credentialsFilePath = path.resolve(_G.HOME_PATH, 'screen.yml')
-  if (process.env.SCREEN_EID && process.env.SCREEN_KEY) {
-    _G.SCREEN_EID = process.env.SCREEN_EID
-    _G.SCREEN_KEY = process.env.SCREEN_KEY
+  // if (process.env.SCREEN_EID && process.env.SCREEN_KEY) {
+  if (process.env.SCREEN_EID) {
+    _G.SCREEN_EID = Number(process.env.SCREEN_EID)
+    _G.SCREEN_KEY = (process.env.SCREEN_KEY ? process.env.SCREEN_KEY : '')
     let credentials = YAML.stringify({ SCREEN_EID: _G.SCREEN_EID, SCREEN_KEY: _G.SCREEN_KEY }, 4)
     fs.writeFileSync(_G.credentialsFilePath, credentials)
   }
@@ -72,6 +73,8 @@ module.exports = (screenEid) => {
     fs.accessSync(_G.credentialsFilePath, fs.R_OK)
   }
   catch (e) {
+    window.alert('Please provide screen ID on first run to initialize the player\n > SCREEN_EID=2670 npm start')
+    window.close()
     throw (e)
     // throw new Error('Credentials file not accessible!')
   }
