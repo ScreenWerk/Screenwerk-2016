@@ -6,6 +6,10 @@
   "author": "Mihkel Putrinš",
   "license": "MIT",
   "homepage": "https://github.com/mitselek/Screenwerk-2016#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mitselek/Screenwerk-2016.git"
+  },
   "build": {
     "app-bundle-id": "your.id",
     "app-category-type": "your.app.category.type",
