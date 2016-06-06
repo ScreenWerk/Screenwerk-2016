@@ -16,14 +16,16 @@ fs.readdirSync(path.resolve(__dirname, '..', 'local')).forEach((filename) => {
   console.log('must terminate ' + pid)
   var isWin = /^win/.test(process.platform)
   try {
-    // if(!isWin) {
       process.kill(pid, 'SIGTERM')
-    // } else {
-      // cp.exec('taskkill /PID ' + pid + ' /T /F')
-    // }
   } catch (e) {
     console.log('Kill failed ' + path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
-    // fs.unlinkSync(path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
+  }
+  if(!isWin) {
+    try {
+      fs.unlinkSync(path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
+    } catch (e) {
+      // console.log(e)
+    }
   }
 })
 // ... and create my own
@@ -81,12 +83,9 @@ function createWindow () {
     let pidFilePath = path.resolve(__dirname, '..', 'local', '.' + process.pid + '.pid')
     console.log('Unlink ' + pidFilePath)
     try {
-      let result = fs.unlinkSync(pidFilePath)
-      if (result instanceof Error) {
-        console.log("Can't unlink " + pidFilePath, result)
-      }
+      fs.unlinkSync(pidFilePath)
     } catch (e) {
-      console.log(e)
+      // console.log(e)
     }
     mainWindow = null
     app.quit()
