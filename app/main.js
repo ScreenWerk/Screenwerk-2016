@@ -8,6 +8,9 @@ const app = electron.app
 const BrowserWindow = electron.BrowserWindow
 
 
+if (!fs.existsSync(path.resolve(__dirname, '..', 'local'))) {
+  fs.mkdirSync(path.resolve(__dirname, '..', 'local'))
+}
 // Kill screenwerk processes if any ...
 fs.readdirSync(path.resolve(__dirname, '..', 'local')).forEach((filename) => {
   console.log(filename.split('.'))
