@@ -23,16 +23,13 @@ module.exports = (screenEid) => {
     MEDIA_TYPE_VIDEO: 'Video',
     MEDIA_TYPE_AUDIO: 'Audio'
   }
-
-  _G.HOME_PATH = path.resolve(
-    process.env.HOME
-      ? process.env.HOME
-      : process.env.HOMEDRIVE + process.env.HOMEPATH, _G.packageJson.name)
+  _G.HOME_PATH = path.resolve(__dirname, '..', '..', 'local')
   if (!fs.existsSync(_G.HOME_PATH)) {
     fs.mkdirSync(_G.HOME_PATH)
   }
 
-  _G.META_DIR = path.resolve(_G.HOME_PATH, 'sw-meta')
+  _G.META_DIR = path.resolve(_G.HOME_PATH)
+  // _G.META_DIR = path.resolve(_G.HOME_PATH, 'sw-meta')
   if (!fs.existsSync(_G.META_DIR)) {
     fs.mkdirSync(_G.META_DIR)
   }
@@ -60,36 +57,51 @@ module.exports = (screenEid) => {
     }
   })
 
+  let closeWithMessage = (message) => {
+    window.alert(message)
+    const {shell} = require('electron')
+    shell.showItemInFolder(_G.credentialsFilePath)
+    throw new Error(message)
+    window.close()
+  }
+
   _G.credentialsFilePath = path.resolve(_G.HOME_PATH, 'screen.yml')
-  // if (process.env.SCREEN_EID && process.env.SCREEN_KEY) {
-  if (process.env.SCREEN_EID) {
-    _G.SCREEN_EID = Number(process.env.SCREEN_EID)
-    _G.SCREEN_KEY = (process.env.SCREEN_KEY ? process.env.SCREEN_KEY : '')
-    let credentials = YAML.stringify({ SCREEN_EID: _G.SCREEN_EID, SCREEN_KEY: _G.SCREEN_KEY }, 4)
-    fs.writeFileSync(_G.credentialsFilePath, credentials)
+  try {
+    fs.accessSync(_G.credentialsFilePath, fs.R_OK)
+  }
+  catch (e) {
+    fs.writeFileSync(_G.credentialsFilePath, YAML.stringify({
+      SCREEN_EID: 0,
+      SCREEN_KEY: '',
+      DISPLAY_NUM: 2,
+      DEV_MODE: false
+    }))
+    closeWithMessage('Please fill in mandatory SCREEN_EID in configuration file "' + _G.credentialsFilePath + '"')
   }
 
   try {
     fs.accessSync(_G.credentialsFilePath, fs.R_OK)
   }
   catch (e) {
-    window.alert('Please provide screen ID on first run to initialize the player\n > SCREEN_EID=2670 npm start')
-    window.close()
-    throw (e)
-    // throw new Error('Credentials file not accessible!')
+    closeWithMessage('Credentials file not accessible!')
   }
 
   try {
     let data = fs.readFileSync(_G.credentialsFilePath, 'utf8')
-    console.log(data)
     let credentials = YAML.parse(data)
-    console.log(credentials)
     _G.SCREEN_EID = credentials.SCREEN_EID
     _G.SCREEN_KEY = credentials.SCREEN_KEY
+    _G.DISPLAY_NUM = credentials.DISPLAY_NUM
+    _G.DEV_MODE = credentials.DEV_MODE
   }
   catch (e) {
-    throw new Error('Credentials file corrupted!')
+    closeWithMessage('Credentials file corrupted!')
   }
+
+  if (!_G.SCREEN_EID) {
+    closeWithMessage('Please fill in mandatory SCREEN_EID in configuration file "' + _G.credentialsFilePath + '"')
+  }
+
   _G.tempConfFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json.download')
   _G.confFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json')
   _G.SCREENWERK_API = 'https://swpublisher.entu.eu/configuration/' + _G.SCREEN_EID

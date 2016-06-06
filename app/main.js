@@ -1,3 +1,6 @@
+const path = require('path')
+const fs = require('fs')
+const YAML = require('yamljs')
 const electron = require('electron')
 // Module to control application life.
 const app = electron.app
@@ -8,15 +11,41 @@ const BrowserWindow = electron.BrowserWindow
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
+let displayNum = 1
+let devMode = false
 function createWindow () {
+
+  let confFilePath = path.resolve('__dirname', '..', 'local', 'screen.yml')
+  try {
+    let data = fs.readFileSync(confFilePath, 'utf8')
+    let conf = YAML.parse(data)
+    displayNum = conf.DISPLAY_NUM
+    devMode = conf.DEV_MODE
+    console.log(conf)
+  }
+  catch (e) {
+    console.log('Cant read from configuration file from ' + confFilePath + '. Not a problem (yet).', e)
+  }
+
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 1400, height: 900})
-  mainWindow.setFullScreen(true)
+  let electronScreen = electron.screen
+  let displays = electronScreen.getAllDisplays()
+  if (displays.length < displayNum) {
+    displayNum = 1
+  }
+  // displayNum should be either 0 (main screen) or the number set in configuration minus one.
+  displayNum --
+  let display = displays[displayNum]
+
+  console.log(displays)
+
+  mainWindow = new BrowserWindow({ x: display.bounds.x, y: display.bounds.y, width: 900, height: 600 })
+  mainWindow.setKiosk(true)
   // and load the index.html of the app.
   mainWindow.loadURL('file://' + __dirname + '/index.html')
 
   // Open the DevTools.
-  if (process.env.DEV === 'true') {
+  if (devMode === true) {
     mainWindow.webContents.openDevTools()
   }
 

@@ -34,7 +34,6 @@ const readConfiguration = (_G, callback) => {
 }
 
 readConfiguration(_G, (code, jsonData) => {
-  // console.log('readConfiguration', code)
   if (code === _G.codes.CONFIGURATION_FILE_OK) {
     playConfiguration(_G, jsonData)
     pollUpdates(_G)
