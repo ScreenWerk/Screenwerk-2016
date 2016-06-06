@@ -16,13 +16,14 @@ fs.readdirSync(path.resolve(__dirname, '..', 'local')).forEach((filename) => {
   console.log('must terminate ' + pid)
   var isWin = /^win/.test(process.platform)
   try {
-    if(!isWin) {
+    // if(!isWin) {
       process.kill(pid, 'SIGTERM')
-    } else {
-      cp.exec('taskkill /PID ' + pid + ' /T /F')
-    }
+    // } else {
+      // cp.exec('taskkill /PID ' + pid + ' /T /F')
+    // }
   } catch (e) {
-    fs.unlinkSync(path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
+    console.log('Kill failed ' + path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
+    // fs.unlinkSync(path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
   }
 })
 // ... and create my own
@@ -79,9 +80,13 @@ function createWindow () {
     // when you should delete the corresponding element.
     let pidFilePath = path.resolve(__dirname, '..', 'local', '.' + process.pid + '.pid')
     console.log('Unlink ' + pidFilePath)
-    let result = fs.unlinkSync(pidFilePath)
-    if (result instanceof Error) {
-      console.log("Can't unlink " + pidFilePath, result)
+    try {
+      let result = fs.unlinkSync(pidFilePath)
+      if (result instanceof Error) {
+        console.log("Can't unlink " + pidFilePath, result)
+      }
+    } catch (e) {
+      console.log(e)
     }
     mainWindow = null
     app.quit()
