@@ -31,6 +31,10 @@ const getNextSchedule = (schedules) => {
 }
 
 module.exports.render = (_G, configuration, mainCallback) => {
+  document.body.style.cursor = 'none'
+  if (_G.DEV_MODE) {
+    document.body.style.cursor = 'crosshair'
+  }
   while (document.getElementById('player').hasChildNodes()) {
     document.getElementById('player').removeChild(document.getElementById('player').lastChild)
   }
