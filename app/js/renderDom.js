@@ -182,7 +182,7 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.src = path.resolve(_G.MEDIA_DIR, swMedia.mediaEid.toString())
     mediaDomElement.overflow = 'hidden'
     mediaDomElement.autoplay = false
-    mediaDomElement.controls = true
+    mediaDomElement.controls = _G.DEV_MODE
     mediaDomElement.muted = swMedia.mute
     mediaNode.appendChild(mediaDomElement)
     mediaDomElement.id = mediaNode.id + '.video'
