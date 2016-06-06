@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "async": "^2.0.0-rc.5",
+    "debug": "^2.2.0",
     "later": "^1.2.0",
     "request": "^2.72.0",
     "yamljs": "^0.2.7"

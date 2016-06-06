@@ -15,13 +15,12 @@ let displayNum = 1
 let devMode = false
 function createWindow () {
 
-  let confFilePath = path.resolve('__dirname', '..', 'local', 'screen.yml')
+  let confFilePath = path.resolve(__dirname, '..', 'local', 'screen.yml')
   try {
     let data = fs.readFileSync(confFilePath, 'utf8')
     let conf = YAML.parse(data)
     displayNum = conf.DISPLAY_NUM
     devMode = conf.DEV_MODE
-    console.log(conf)
   }
   catch (e) {
     console.log('Cant read from configuration file from ' + confFilePath + '. Not a problem (yet).', e)
@@ -37,8 +36,6 @@ function createWindow () {
   displayNum --
   let display = displays[displayNum]
 
-  console.log(displays)
-
   mainWindow = new BrowserWindow({ x: display.bounds.x, y: display.bounds.y, width: 900, height: 600 })
   mainWindow.setKiosk(true)
   mainWindow.setMenu(null)
@@ -48,7 +45,10 @@ function createWindow () {
   // Open the DevTools.
   if (devMode === true) {
     mainWindow.webContents.openDevTools()
+    process.env.DEBUG = '*'
   }
+  const debug = require('debug')('main')
+  debug('Running in DEBUG=* mode')
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {

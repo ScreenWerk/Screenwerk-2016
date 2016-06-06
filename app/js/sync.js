@@ -12,7 +12,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
 
   fs.readFile(_G.confFilePath, (err, configuration) => {
     if (err) {
-      // console.log(err)
+      console.log(err)
     }
     else {
       _G.configurationTs = (new Date(JSON.parse(configuration).publishedAt)).getTime()
