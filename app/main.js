@@ -70,6 +70,7 @@ function createWindow () {
   mainWindow.setKiosk(true)
   mainWindow.setMenu(null)
   mainWindow.setSkipTaskbar(skipTaskbar)
+  mainWindow.setIcon(path.resolve(__dirname, '..', 'public', 'icon.ico'))
   // and load the index.html of the app.
   mainWindow.loadURL('file://' + __dirname + '/index.html')
 
