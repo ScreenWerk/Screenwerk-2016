@@ -48,7 +48,7 @@ function createWindow () {
     let data = fs.readFileSync(confFilePath, 'utf8')
     let conf = YAML.parse(data)
     displayNum = conf.DISPLAY_NUM
-    skipTaskbar = conf.SKIP_TASKBAR
+    skipTaskbar = conf.SKIP_TASKBAR || true
     devMode = conf.DEV_MODE
   }
   catch (e) {
