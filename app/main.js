@@ -39,17 +39,18 @@ fs.writeFileSync(pidFilePath, process.pid, 'utf8')
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
-let displayNum = 1
+let displayNum = 2
 let devMode = false
+let skipTaskbar = true
 function createWindow () {
 
   let confFilePath = path.resolve(__dirname, '..', 'local', 'screen.yml')
   try {
     let data = fs.readFileSync(confFilePath, 'utf8')
     let conf = YAML.parse(data)
-    displayNum = conf.DISPLAY_NUM || 2
-    skipTaskbar = conf.SKIP_TASKBAR || true
-    devMode = conf.DEV_MODE || false
+    displayNum = conf.DISPLAY_NUM || displayNum
+    skipTaskbar = conf.SKIP_TASKBAR || skipTaskbar
+    devMode = conf.DEV_MODE || devMode
   }
   catch (e) {
     console.log('Cant read from configuration file from ' + confFilePath + '. Not a problem (yet).', e)
