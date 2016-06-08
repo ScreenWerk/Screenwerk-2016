@@ -23,7 +23,7 @@ fs.readdirSync(path.resolve(__dirname, '..', 'local')).forEach((filename) => {
   } catch (e) {
     console.log('Kill failed ' + path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
   }
-  if(!isWin) {
+  if(isWin) {
     try {
       fs.unlinkSync(path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
     } catch (e) {
