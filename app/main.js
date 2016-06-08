@@ -51,6 +51,7 @@ function createWindow () {
     displayNum = conf.DISPLAY_NUM || displayNum
     skipTaskbar = conf.SKIP_TASKBAR || skipTaskbar
     devMode = conf.DEV_MODE || devMode
+    console.log('Configured as', JSON.stringify(conf, null, 4))
   }
   catch (e) {
     console.log('Cant read from configuration file from ' + confFilePath + '. Not a problem (yet).', e)
