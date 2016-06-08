@@ -74,6 +74,7 @@ module.exports = (screenEid) => {
       SCREEN_EID: 0,
       SCREEN_KEY: '',
       DISPLAY_NUM: 2,
+      SKIP_TASKBAR: true,
       DEV_MODE: false
     }))
     closeWithMessage('Please fill in mandatory SCREEN_EID in configuration file "' + _G.credentialsFilePath + '"')
