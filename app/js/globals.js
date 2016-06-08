@@ -61,8 +61,8 @@ module.exports = (screenEid) => {
     window.alert(message)
     const {shell} = require('electron')
     shell.showItemInFolder(_G.credentialsFilePath)
-    throw new Error(message)
     window.close()
+    throw new Error(message)
   }
 
   _G.credentialsFilePath = path.resolve(_G.HOME_PATH, 'screen.yml')
