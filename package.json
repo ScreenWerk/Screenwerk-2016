@@ -1,32 +1,39 @@
 {
   "name": "Screenwerk2016",
   "productName": "Screenwerk 2016",
-  "version": "0.1.0",
+  "version": "0.1.1-0",
   "description": "Screenwerk2016",
-  "author": "Mihkel Putrinš",
-  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron main.js"
+  },
   "homepage": "https://github.com/mitselek/Screenwerk-2016#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mitselek/Screenwerk-2016.git"
   },
-  "build": {
-    "app-bundle-id": "your.id",
-    "app-category-type": "your.app.category.type",
-    "win": {
-      "iconUrl": "https://raw.githubusercontent.com/mitselek/Screenwerk-2016/master/build/icon.ico",
-      "msi": false,
-      "remoteReleases": "",
-      "remoteToken": ""
-    }
+  "bugs": {
+    "url": "https://github.com/mitselek/Screenwerk-2016/issues"
   },
+  "keywords": [
+    "Electron",
+    "Screenwerk"
+  ],
+  "author": "Mihkel Putrinš",
+  "license": "MIT",
   "devDependencies": {
     "electron-prebuilt": "^1.2.0"
   },
+  "dependencies": {
+    "async": "^2.0.0-rc.5",
+    "debug": "^2.2.0",
+    "later": "^1.2.0",
+    "request": "^2.72.0",
+    "yamljs": "^0.2.7"
+  },
   "scripts": {
-    "postinstall": "install-app-deps",
-    "pack": "build --target dir",
-    "dist": "build",
+    "postinstall": "electron app/main.js",
+    "prestart": "git pull",
     "start": "electron app/main.js"
   }
 }
