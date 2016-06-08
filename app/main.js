@@ -70,7 +70,9 @@ function createWindow () {
   mainWindow = new BrowserWindow({ x: display.bounds.x, y: display.bounds.y, width: 900, height: 600 })
   mainWindow.setKiosk(true)
   mainWindow.setMenu(null)
-  mainWindow.setSkipTaskbar(skipTaskbar)
+  if (skipTaskbar) {
+    mainWindow.setSkipTaskbar(skipTaskbar)
+  }
   mainWindow.setIcon(path.resolve(__dirname, '..', 'public', 'icon.ico'))
   // and load the index.html of the app.
   mainWindow.loadURL('file://' + __dirname + '/index.html')
