@@ -7,6 +7,8 @@ const app = electron.app
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
+const isWin = /^win/.test(process.platform)
+
 
 if (!fs.existsSync(path.resolve(__dirname, '..', 'local'))) {
   fs.mkdirSync(path.resolve(__dirname, '..', 'local'))
@@ -17,7 +19,6 @@ fs.readdirSync(path.resolve(__dirname, '..', 'local')).forEach((filename) => {
   if (filename.split('.')[2] !== 'pid') { return }
   let pid = filename.split('.')[1]
   console.log('must terminate ' + pid)
-  var isWin = /^win/.test(process.platform)
   try {
       process.kill(pid, 'SIGTERM')
   } catch (e) {
@@ -73,7 +74,9 @@ function createWindow () {
   if (skipTaskbar) {
     mainWindow.setSkipTaskbar(skipTaskbar)
   }
-  mainWindow.setIcon(path.resolve(__dirname, '..', 'public', 'icon.ico'))
+  if (isWin) {
+    mainWindow.setIcon(path.resolve(__dirname, '..', 'public', 'icon.ico'))
+  }
   // and load the index.html of the app.
   mainWindow.loadURL('file://' + __dirname + '/index.html')
 
