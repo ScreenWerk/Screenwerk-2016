@@ -52,13 +52,43 @@
         height: 100%;
         object-fit: contain;
       }
+      #screenEid {
+        font-family: Gill Sans Extrabold, sans-serif;
+        font-size: 2em;
+        color: white;
+        border: 0px;
+        border-radius: 4px;
+        background-color: midnightBlue;
+        padding: 1em;
+        display: none;
+      }
+      #screenEid > input {
+        outline: none;
+        font-family: Gill Sans Extrabold, sans-serif;
+        font-size: 2em;
+        color: white;
+        border: 0px;
+        border-radius: 4px;
+        background-color: midnightBlue;
+        padding: 1em;
+      }
+      #screenEid > pre {
+        font-family: Gill Sans Extrabold, sans-serif;
+        font-size: 1em;
+        color: white;
+        border: 0px;
+        border-radius: 4px;
+        background-color: midnightBlue;
+        padding: 1em;
+      }
     </style>
   </head>
   <body>
     <!-- All of the Node.js APIs are available in this renderer process. -->
-    <!-- <div id="screenEid">
-      Screen ID: <input type="text" name="screenEid" value="">
-    </div> -->
+    <div id="screenEid">
+      <input id="screenEidInput" type="text" name="screenEid" value="">
+      <pre id="screenEidResult"></pre>
+    </div>
     <pre class="sysinfo">
 Node <script>document.write(process.versions.node)</script> | Chromium <script>document.write(process.versions.chrome)</script> | Electron <script>document.write(process.versions.electron)</script> | Configuration updated at <span id="lastUpdatedAt"></span></pre>
     <div id="player"></div>

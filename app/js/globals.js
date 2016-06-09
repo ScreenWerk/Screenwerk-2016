@@ -1,12 +1,12 @@
 const path = require('path')
 const fs = require('fs')
+const request = require('request')
 const YAML = require('yamljs')
 
 // Initialise globals, sanity check filesystem
-module.exports = (screenEid) => {
+module.exports = (callback) => {
   let _G = {} // Globals. Paths, screenEid, etc.
 
-  _G.SCREEN_EID = screenEid
   _G.packageJson = require(path.resolve(__dirname, '..', '..', 'package.json'))
 
   _G.codes = {
@@ -128,22 +128,69 @@ module.exports = (screenEid) => {
   // _G.SCREEN_KEY = credentials.SCREEN_KEY
   // _G.DISPLAY_NUM = credentials.DISPLAY_NUM
   // _G.DEV_MODE = credentials.DEV_MODE
+  _G.SCREENWERK_API = 'https://swpublisher.entu.eu/configuration/'
+
+  _G.setScreenEid = (_G, eid) => {
+    let credentials = readCredentials(_G)
+    _G.SCREEN_EID = eid
+    writeCredentials(_G)
+  }
 
   if (_G.SCREEN_EID) {
     _G.tempConfFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json.download')
     _G.confFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json')
-    _G.SCREENWERK_API = 'https://swpublisher.entu.eu/configuration/' + _G.SCREEN_EID
-
-
-    _G.setScreenEid = (_G, eid) => {
-      let credentials = readCredentials(_G)
-      _G.SCREEN_EID = eid
-      writeCredentials(_G)
-    }
-
-    return _G
+    callback(null, _G)
   }
+  else {
+    let screenEidDiv = document.getElementById('screenEid')
+    let screenEidInput = document.getElementById('screenEidInput')
+    let screenEidResult = document.getElementById('screenEidResult')
 
-  closeWithMessage('Please fill in mandatory SCREEN_EID in configuration file "' + _G.credentialsFilePath + '"')
+    screenEidResult.innerHTML = 'Please provide valid screen ID'
+    screenEidDiv.style.display = 'block'
+    screenEidInput.addEventListener('keyup', (e) => {
+      if (/^\d+$/.test(screenEidInput.value)) {
+        screenEidResult.innerHTML = screenEidInput.value
+        if (screenEidInput.value.length >= 2) {
+          screenEidResult.innerHTML = 'Looking up ' + screenEidInput.value + ' ...'
 
+          let responseData = ''
+          request(_G.SCREENWERK_API + screenEidInput.value)
+          .on('response', (res) => {
+            if (res.statusCode !== 200) {
+              screenEidResult.innerHTML = JSON.stringify({not200:res}, null, 4)
+            }
+          })
+          .on('error', (err) => {
+            screenEidResult.innerHTML = JSON.stringify({error:err}, null, 4)
+            // callback(err)
+          })
+          .on('data', (d) => {
+            responseData = responseData + d
+          })
+          .on('end', () => {
+            let parsedData = JSON.parse(responseData)
+            if (parsedData.error) {
+              screenEidResult.innerHTML = JSON.stringify(parsedData.error, null, 4)
+            }
+            else if (parsedData.screenEid) {
+              _G.SCREEN_EID = parsedData.screenEid
+              _G.tempConfFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json.download')
+              _G.confFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json')
+              writeCredentials(_G)
+              callback(null, _G)
+              screenEidDiv.style.display = 'none'
+            }
+          })
+        }
+      }
+      else if (screenEidInput.value.length > 0) {
+        screenEidResult.innerHTML = 'Digits only, please.'
+      }
+      else {
+        screenEidResult.innerHTML = 'Please provide valid screen ID'
+      }
+    })
+    screenEidInput.focus()
+  }
 }

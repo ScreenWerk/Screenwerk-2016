@@ -20,8 +20,8 @@ module.exports.fetchConfiguration = (_G, callback) => {
     }
 
     let data = ''
-    // console.log('Requesting ' + _G.SCREENWERK_API)
-    request(_G.SCREENWERK_API)
+    console.log('Requesting ' + _G.SCREENWERK_API + _G.SCREEN_EID)
+    request(_G.SCREENWERK_API + _G.SCREEN_EID)
     .on('response', (res) => {
       if (res.statusCode !== 200) {
         console.error('statusCode: ', res.statusCode, 'headers: ', res.headers)
