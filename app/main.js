@@ -69,8 +69,14 @@ function createWindow () {
   let display = displays[displayNum]
 
   mainWindow = new BrowserWindow({ x: display.bounds.x, y: display.bounds.y, width: 900, height: 600 })
-  mainWindow.setKiosk(true)
   mainWindow.setMenu(null)
+  if (devMode) {
+    mainWindow.setFullScreen(true)
+    mainWindow.webContents.openDevTools()
+    process.env.DEBUG = '*'
+  } else {
+    mainWindow.setKiosk(true)
+  }
   if (skipTaskbar) {
     mainWindow.setSkipTaskbar(skipTaskbar)
   }
@@ -80,11 +86,6 @@ function createWindow () {
   // and load the index.html of the app.
   mainWindow.loadURL('file://' + __dirname + '/index.html')
 
-  // Open the DevTools.
-  if (devMode === true) {
-    mainWindow.webContents.openDevTools()
-    process.env.DEBUG = '*'
-  }
   const debug = require('debug')('main')
   debug('Running in DEBUG=* mode')
 
