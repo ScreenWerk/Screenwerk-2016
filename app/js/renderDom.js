@@ -1,6 +1,7 @@
 const async = require('async')
-const path = require('path')
+const fs = require('fs')
 const later = require('later')
+const path = require('path')
 
 const getOrderedSchedules = (schedules) => {
   return Object.keys(schedules)
@@ -30,7 +31,9 @@ const getNextSchedule = (schedules) => {
   return nextSchedule
 }
 
+
 module.exports.render = (_G, configuration, mainCallback) => {
+  _G.playbackLog.write(new Date().toJSON() + '\n')
   document.body.style.cursor = 'none'
   if (_G.DEV_MODE) {
     document.body.style.cursor = 'crosshair'
@@ -44,7 +47,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
   document.getElementById('player').appendChild(playerRootNode)
 
   playerRootNode.stopPlayback = function () {
-    console.log('Stop all')
+    _G.playbackLog.write(new Date().toJSON() + ' Stop  all' + '\n')
     Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
   }
 
@@ -65,7 +68,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
     layoutNode.getNextSchedule = getNextSchedule
 
     layoutNode.stopPlayback = function () {
-      console.log('Stop layout ' + layoutNode.id)
+      _G.playbackLog.write(new Date().toJSON() + ' Stop  layout ' + layoutNode.id + '\n')
       Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
     }
 
@@ -74,7 +77,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
         playerRootNode.stopPlayback()
       }
       let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
-      console.log('Start layout ' + layoutNode.id, 'Play for ' + (nextSchedule.next - new Date()) + ' ms.')
+      _G.playbackLog.write(new Date().toJSON() + ' Start layout ' + layoutNode.id + '. Play for ' + (nextSchedule.next - new Date()) + ' ms.' + '\n')
       Array.from(this.childNodes).forEach((a) => {
         console.log(a)
         a.startPlayback()
@@ -108,12 +111,12 @@ module.exports.render = (_G, configuration, mainCallback) => {
       }
 
       playlistNode.stopPlayback = function () {
-        console.log('Stop playlist ' + playlistNode.id)
+        _G.playbackLog.write(new Date().toJSON() + ' Stop  playlist ' + playlistNode.id + '\n')
         Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
       }
 
       playlistNode.startPlayback = function () { // this === playlistNode
-        console.log('Start playlist ' + playlistNode.id)
+        _G.playbackLog.write(new Date().toJSON() + ' Start playlist ' + playlistNode.id + '\n')
         this.firstChild.startPlayback()
       }
 
@@ -137,14 +140,14 @@ module.exports.render = (_G, configuration, mainCallback) => {
         mediaNode.className = 'media'
 
         mediaNode.stopPlayback = function () {
-          console.log('Stop media ' + mediaNode.id)
+          _G.playbackLog.write(new Date().toJSON() + ' Stop  media ' + mediaNode.id + '\n')
           mediaNode.style.visibility = 'hidden'
           this.firstChild.pause()
           this.firstChild.currentTime = 0
         }
 
         mediaNode.startPlayback = function () { // this === mediaNode
-          console.log('Start media ' + mediaNode.id)
+          _G.playbackLog.write(new Date().toJSON() + ' Start media ' + mediaNode.id + '\n')
           mediaNode.style.visibility = 'visible'
           this.firstChild.currentTime = 0
           this.firstChild.play()
@@ -190,15 +193,23 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.muted = swMedia.mute
     mediaNode.appendChild(mediaDomElement)
     mediaDomElement.id = mediaNode.id + '.video'
+    mediaDomElement.addEventListener('durationchange', () => {
+      _G.playbackLog.write(new Date().toJSON() + ' Video media ' + mediaNode.id + ' duration ' + mediaDomElement.duration + 'sec\n')
+    })
+    mediaDomElement.addEventListener('play', () => {
+      _G.playbackLog.write(new Date().toJSON() + ' Video media ' + mediaNode.id + ' started\n')
+    })
     mediaDomElement.addEventListener('ended', () => {
-      console.log('mediaNode.stopPlayback() from "video ended" event.')
+      _G.playbackLog.write(new Date().toJSON() + ' Video media ' + mediaNode.id + ' ended. Start delay ' + swMedia.delay * 1e3 + 'ms\n')
+      // console.log('mediaNode.stopPlayback() from "video ended" event.')
       mediaNode.stopPlayback()
       setTimeout(function () {
         mediaNode.nextMediaNode.startPlayback()
       }, swMedia.delay * 1e3)
     })
     callback()
-  } else if (swMedia.type === _G.codes.MEDIA_TYPE_AUDIO) {
+  }
+  else if (swMedia.type === _G.codes.MEDIA_TYPE_AUDIO) {
     let mediaDomElement = document.createElement('AUDIO')
     mediaDomElement.src = path.resolve(_G.MEDIA_DIR, swMedia.mediaEid.toString())
     mediaNode.appendChild(mediaDomElement)
@@ -211,7 +222,8 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
       }, swMedia.delay * 1e3)
     })
     callback()
-  } else if (swMedia.type === _G.codes.MEDIA_TYPE_IMAGE) {
+  }
+  else if (swMedia.type === _G.codes.MEDIA_TYPE_IMAGE) {
     let mediaDomElement = document.createElement('IMG')
     mediaDomElement.src = path.resolve(_G.MEDIA_DIR, swMedia.mediaEid.toString())
     mediaNode.appendChild(mediaDomElement)
@@ -232,7 +244,8 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     }
     mediaDomElement.pause = () => {}
     callback()
-  } else if (swMedia.type === _G.codes.MEDIA_TYPE_URL) {
+  }
+  else if (swMedia.type === _G.codes.MEDIA_TYPE_URL) {
     let mediaDomElement = document.createElement('IFRAME')
     mediaDomElement.src = swMedia.url
     mediaDomElement.scrolling = 'yes'
