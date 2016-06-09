@@ -23,6 +23,7 @@ const getNextSchedule = (schedules) => {
   Object.keys(schedules).forEach((a) => {
     let crtab = schedules[a].crontab
     let sched = later.parse.cron(crtab)
+    let later.schedule(sched).next(1, new Date()).getTime())
     schedules[a].next = new Date(later.schedule(sched).next().getTime())
     if (nextSchedule.next < schedules[a].next) {
       nextSchedule = schedules[a]
@@ -79,7 +80,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
       let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
       _G.playbackLog.write(new Date().toJSON() + ' Start layout ' + layoutNode.id + '. Play for ' + (nextSchedule.next - new Date()) + ' ms.' + '\n')
       Array.from(this.childNodes).forEach((a) => {
-        console.log(a)
+        // console.log(a)
         a.startPlayback()
       })
       let self = this
