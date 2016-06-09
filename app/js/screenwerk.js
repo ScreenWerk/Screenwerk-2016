@@ -4,8 +4,9 @@
 const path = require('path')
 const fs = require('fs')
 
+console.log('Starting screenwerk.js')
 let _G = require(path.resolve(__dirname, 'globals.js'))() // Globals. Paths, screenEid, etc.
-
+console.log('Globals loaded')
 const sync = require(path.resolve(__dirname, 'sync.js'))
 
 const readConfiguration = (_G, callback) => {

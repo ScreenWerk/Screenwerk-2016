@@ -57,7 +57,10 @@ module.exports = (screenEid) => {
     }
   })
 
-  let closeWithMessage = (message) => {
+  _G.playbackLog = fs.createWriteStream(path.resolve(_G.HOME_PATH, 'playback.log'))
+  _G.playbackLog.setDefaultEncoding('utf8')
+
+  function closeWithMessage (message) {
     window.alert(message)
     const {shell} = require('electron')
     shell.showItemInFolder(_G.credentialsFilePath)
@@ -65,19 +68,48 @@ module.exports = (screenEid) => {
     throw new Error(message)
   }
 
+  function writeCredentials (_G) {
+    let confYaml = YAML.stringify(
+      {
+        "SCREEN_EID": _G.SCREEN_EID,
+        "SCREEN_KEY": _G.SCREEN_KEY,
+        "DISPLAY_NUM": _G.DISPLAY_NUM,
+        "SKIP_TASKBAR": _G.SKIP_TASKBAR,
+        "DEV_MODE": _G.DEV_MODE
+      }
+    )
+    console.log('Writing to ' + _G.credentialsFilePath + ': ' + confYaml)
+    try {
+      fs.writeFileSync(_G.credentialsFilePath, confYaml)
+    } catch (e) {
+      closeWithMessage('Credentials file not writable!')
+      return {}
+    }
+  }
+
+  function readCredentials (_G) {
+    try {
+      let data = fs.readFileSync(_G.credentialsFilePath, 'utf8')
+      return YAML.parse(data)
+    }
+    catch (e) {
+      closeWithMessage('Credentials file corrupted!')
+      return {}
+    }
+  }
+
   _G.credentialsFilePath = path.resolve(_G.HOME_PATH, 'screen.yml')
+  console.log('Credentials at ' + _G.credentialsFilePath)
   try {
     fs.accessSync(_G.credentialsFilePath, fs.R_OK)
   }
   catch (e) {
-    fs.writeFileSync(_G.credentialsFilePath, YAML.stringify({
-      SCREEN_EID: 0,
-      SCREEN_KEY: '',
-      DISPLAY_NUM: 2,
-      SKIP_TASKBAR: true,
-      DEV_MODE: false
-    }))
-    closeWithMessage('Please fill in mandatory SCREEN_EID in configuration file "' + _G.credentialsFilePath + '"')
+    _G.SCREEN_EID = 0
+    _G.SCREEN_KEY = ''
+    _G.DISPLAY_NUM = 2
+    _G.SKIP_TASKBAR = true
+    _G.DEV_MODE = false
+    writeCredentials(_G)
   }
 
   try {
@@ -87,25 +119,31 @@ module.exports = (screenEid) => {
     closeWithMessage('Credentials file not accessible!')
   }
 
-  try {
-    let data = fs.readFileSync(_G.credentialsFilePath, 'utf8')
-    let credentials = YAML.parse(data)
-    _G.SCREEN_EID = credentials.SCREEN_EID
-    _G.SCREEN_KEY = credentials.SCREEN_KEY
-    _G.DISPLAY_NUM = credentials.DISPLAY_NUM
-    _G.DEV_MODE = credentials.DEV_MODE
+  let credentials = readCredentials(_G)
+  for (ix in credentials) {
+    _G[ix] = credentials[ix]
   }
-  catch (e) {
-    closeWithMessage('Credentials file corrupted!')
+  console.log(credentials)
+  // _G.SCREEN_EID = credentials.SCREEN_EID
+  // _G.SCREEN_KEY = credentials.SCREEN_KEY
+  // _G.DISPLAY_NUM = credentials.DISPLAY_NUM
+  // _G.DEV_MODE = credentials.DEV_MODE
+
+  if (_G.SCREEN_EID) {
+    _G.tempConfFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json.download')
+    _G.confFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json')
+    _G.SCREENWERK_API = 'https://swpublisher.entu.eu/configuration/' + _G.SCREEN_EID
+
+
+    _G.setScreenEid = (_G, eid) => {
+      let credentials = readCredentials(_G)
+      _G.SCREEN_EID = eid
+      writeCredentials(_G)
+    }
+
+    return _G
   }
 
-  if (!_G.SCREEN_EID) {
-    closeWithMessage('Please fill in mandatory SCREEN_EID in configuration file "' + _G.credentialsFilePath + '"')
-  }
+  closeWithMessage('Please fill in mandatory SCREEN_EID in configuration file "' + _G.credentialsFilePath + '"')
 
-  _G.tempConfFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json.download')
-  _G.confFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json')
-  _G.SCREENWERK_API = 'https://swpublisher.entu.eu/configuration/' + _G.SCREEN_EID
-
-  return _G
 }

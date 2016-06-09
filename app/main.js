@@ -15,14 +15,15 @@ if (!fs.existsSync(path.resolve(__dirname, '..', 'local'))) {
 }
 // Kill screenwerk processes if any ...
 fs.readdirSync(path.resolve(__dirname, '..', 'local')).forEach((filename) => {
-  console.log(filename.split('.'))
+  // console.log(filename.split('.'))
   if (filename.split('.')[2] !== 'pid') { return }
   let pid = filename.split('.')[1]
-  console.log('must terminate ' + pid)
+  // console.log('must terminate ' + pid)
   try {
-      process.kill(pid, 'SIGTERM')
+    process.kill(pid, 'SIGTERM')
   } catch (e) {
-    console.log('Kill failed ' + path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
+    // console.log('Kill failed ' + path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
+    fs.unlinkSync(path.resolve(__dirname, '..', 'local', '.' + pid + '.pid'))
   }
   if(isWin) {
     try {
@@ -75,7 +76,8 @@ function createWindow () {
     mainWindow.webContents.openDevTools()
     process.env.DEBUG = '*'
   } else {
-    mainWindow.setKiosk(true)
+    mainWindow.setFullScreen(true)
+    // mainWindow.setKiosk(true)
   }
   if (skipTaskbar) {
     mainWindow.setSkipTaskbar(skipTaskbar)
