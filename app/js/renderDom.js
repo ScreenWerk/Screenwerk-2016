@@ -23,8 +23,7 @@ const getNextSchedule = (schedules) => {
   Object.keys(schedules).forEach((a) => {
     let crtab = schedules[a].crontab
     let sched = later.parse.cron(crtab)
-    let later.schedule(sched).next(1, new Date()).getTime())
-    schedules[a].next = new Date(later.schedule(sched).next().getTime())
+    schedules[a].next = new Date(later.schedule(sched).next(1, new Date()).getTime())
     if (nextSchedule.next < schedules[a].next) {
       nextSchedule = schedules[a]
     }
