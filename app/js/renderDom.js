@@ -82,12 +82,14 @@ module.exports.render = (_G, configuration, mainCallback) => {
         playerRootNode.stopPlayback()
       }
       let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
-      _G.playbackLog.write(new Date().toJSON() + ' Start layout ' + layoutNode.id + '. Play for ' + (nextSchedule.next - new Date()) + ' ms.' + '\n')
-      Array.from(this.childNodes).forEach((a) => {
-        // console.log(a)
-        a.startPlayback()
-      })
       let self = this
+      setTimeout(function () {
+        _G.playbackLog.write(new Date().toJSON() + ' Start layout ' + layoutNode.id + '. Play for ' + (nextSchedule.next - new Date()) + ' ms.' + '\n')
+        Array.from(self.childNodes).forEach((a) => {
+          // console.log(a)
+          a.startPlayback()
+        })
+      }, 10)
       setTimeout(() => {
         nextSchedule.layoutNode.startPlayback()
         self.stopPlayback()
