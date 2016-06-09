@@ -49,6 +49,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
   document.getElementById('player').appendChild(playerRootNode)
 
   playerRootNode.stopPlayback = function () {
+    playerRootNode.playbackStatus = 'stopped'
     _G.playbackLog.write(new Date().toJSON() + ' Stop  all' + '\n')
     Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
   }
@@ -70,11 +71,13 @@ module.exports.render = (_G, configuration, mainCallback) => {
     layoutNode.getNextSchedule = getNextSchedule
 
     layoutNode.stopPlayback = function () {
+      layoutNode.playbackStatus = 'stopped'
       _G.playbackLog.write(new Date().toJSON() + ' Stop  layout ' + layoutNode.id + '\n')
       Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
     }
 
     layoutNode.startPlayback = function () { // this === layoutNode
+      layoutNode.playbackStatus = 'started'
       if (schedule.cleanup) {
         playerRootNode.stopPlayback()
       }
@@ -113,11 +116,13 @@ module.exports.render = (_G, configuration, mainCallback) => {
       }
 
       playlistNode.stopPlayback = function () {
+        playlistNode.playbackStatus = 'stopped'
         _G.playbackLog.write(new Date().toJSON() + ' Stop  playlist ' + playlistNode.id + '\n')
         Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
       }
 
       playlistNode.startPlayback = function () { // this === playlistNode
+        playlistNode.playbackStatus = 'started'
         _G.playbackLog.write(new Date().toJSON() + ' Start playlist ' + playlistNode.id + '\n')
         this.firstChild.startPlayback()
       }
@@ -128,6 +133,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
       async.forEachOf(playlist.playlistMedias, (swMedia, playlistMediaEid, callback) => {
         swMedia.mediaNode = document.createElement('div')
         let mediaNode = swMedia.mediaNode
+        mediaNode.playlistNode = playlistNode
         mediaNode.swMedia = swMedia
 
         if (firstMediaNode === undefined) { firstMediaNode = mediaNode }
@@ -142,6 +148,10 @@ module.exports.render = (_G, configuration, mainCallback) => {
         mediaNode.className = 'media'
 
         mediaNode.stopPlayback = function () {
+          mediaNode.timers.forEach((timer) => {
+            clearTimeout(timer)
+          })
+          mediaNode.playbackStatus = 'stopped'
           _G.playbackLog.write(new Date().toJSON() + ' Stop  media ' + mediaNode.id + '\n')
           mediaNode.style.visibility = 'hidden'
           this.firstChild.pause()
@@ -149,15 +159,13 @@ module.exports.render = (_G, configuration, mainCallback) => {
         }
 
         mediaNode.startPlayback = function () { // this === mediaNode
-          _G.playbackLog.write(new Date().toJSON() + ' Start media ' + mediaNode.id + '\n')
-          mediaNode.style.visibility = 'visible'
-          this.firstChild.currentTime = 0
-          this.firstChild.play()
-          // if (this.swMedia.duration) {
-          //   setTimeout(function () {
-          //     this.stopPlayback()
-          //   }, this.swMedia.duration * 1e3)
-          // }
+          if (mediaNode.playlistNode.playbackStatus === 'started') {
+            mediaNode.playbackStatus = 'started'
+            _G.playbackLog.write(new Date().toJSON() + ' Start media ' + mediaNode.id + '\n')
+            mediaNode.style.visibility = 'visible'
+            this.firstChild.currentTime = 0
+            this.firstChild.play()
+          }
         }
         insertMedia(_G, mediaNode, swMedia, callback)
       }, function (err) {
@@ -182,6 +190,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
 
 const insertMedia = (_G, mediaNode, swMedia, callback) => {
   // console.log('Insert media ' + swMedia.mediaEid + '(' + mediaNode.id + ').', swMedia.type)
+  mediaNode.timers = []
   let mediaDomElement
   if (swMedia.type === _G.codes.MEDIA_TYPE_VIDEO) {
     mediaDomElement = document.createElement('VIDEO')
@@ -205,9 +214,9 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
       _G.playbackLog.write(new Date().toJSON() + ' Video media ' + mediaNode.id + ' ended. Start delay ' + swMedia.delay * 1e3 + 'ms\n')
       // console.log('mediaNode.stopPlayback() from "video ended" event.')
       mediaNode.stopPlayback()
-      setTimeout(function () {
+      mediaNode.timers.push(setTimeout(function () {
         mediaNode.nextMediaNode.startPlayback()
-      }, swMedia.delay * 1e3)
+      }, swMedia.delay * 1e3))
     })
     callback()
   }
@@ -219,9 +228,9 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.addEventListener('ended', () => {
       console.log('mediaNode.stopPlayback() from "audio ended" event.')
       mediaNode.stopPlayback()
-      setTimeout(function () {
+      mediaNode.timers.push(setTimeout(function () {
         mediaNode.nextMediaNode.startPlayback()
-      }, swMedia.delay * 1e3)
+      }, swMedia.delay * 1e3))
     })
     callback()
   }
@@ -235,13 +244,13 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.play = () => {
       // If duration is not set, the image will stay on screen until playlist gets cleaned
       if (swMedia.duration) {
-        setTimeout(function () {
+        mediaNode.timers.push(setTimeout(function () {
           console.log('mediaNode.stopPlayback() from "image ended" event.', swMedia)
           mediaNode.stopPlayback()
-          setTimeout(function () {
+          mediaNode.timers.push(setTimeout(function () {
             mediaNode.nextMediaNode.startPlayback()
-          }, swMedia.delay * 1e3)
-        }, swMedia.duration * 1e3)
+          }, swMedia.delay * 1e3))
+        }, swMedia.duration * 1e3))
       }
     }
     mediaDomElement.pause = () => {}
@@ -256,13 +265,13 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     // Properties and methods not present natively
     // mediaDomElement.currentTime = 0
     mediaDomElement.play = () => {
-      setTimeout(function () {
+      mediaNode.timers.push(setTimeout(function () {
         console.log('mediaNode.stopPlayback() from "URL ended" event.')
         mediaNode.stopPlayback()
-        setTimeout(function () {
+        mediaNode.timers.push(setTimeout(function () {
           mediaNode.nextMediaNode.startPlayback()
-        }, swMedia.delay * 1e3)
-      }, swMedia.duration * 1e3)
+        }, swMedia.delay * 1e3))
+      }, swMedia.duration * 1e3))
     }
     mediaDomElement.pause = () => {}
     callback()
