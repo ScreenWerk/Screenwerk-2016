@@ -79,6 +79,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
     layoutNode.startPlayback = function () { // this === layoutNode
       layoutNode.playbackStatus = 'started'
       if (schedule.cleanup) {
+        _G.playbackLog.write(new Date().toJSON() + ' Schedule ' + schedule.id + ' requesting cleanup\n')
         playerRootNode.stopPlayback()
       }
       let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
