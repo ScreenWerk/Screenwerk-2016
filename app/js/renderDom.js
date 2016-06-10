@@ -35,7 +35,6 @@ const getNextSchedule = (schedules) => {
 
 
 module.exports.render = (_G, configuration, mainCallback) => {
-  _G.playbackLog.write(new Date().toJSON() + '\n')
   document.body.style.cursor = 'none'
   if (_G.DEV_MODE) {
     document.body.style.cursor = 'crosshair'
