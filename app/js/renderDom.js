@@ -20,18 +20,28 @@ const getOrderedSchedules = (schedules) => {
 
 const getNextSchedule = (schedules) => {
   let nextSchedule = schedules[Object.keys(schedules)[0]]
+  console.log('Set next', nextSchedule)
   Object.keys(schedules).forEach((a) => {
+    console.log('Test', schedules[a])
     let crtab = schedules[a].crontab
     let sched = later.parse.cron(crtab)
     let now = new Date()
     now.setSeconds(now.getSeconds() + 1)
     schedules[a].next = new Date(later.schedule(sched).next(1, now).getTime())
-    if (nextSchedule.next < schedules[a].next) {
+    if (nextSchedule.next > schedules[a].next) {
       nextSchedule = schedules[a]
+      console.log('Next', nextSchedule)
     }
   })
   return nextSchedule
 }
+
+// const getNextEventDelayMs = (schedule) => {
+//   let crtab = schedule.crontab
+//   let sched = later.parse.cron(crtab)
+//   let now = new Date()
+//   console.log(later.schedule(sched).next(1, now).getTime())
+// }
 
 
 module.exports.render = (_G, configuration, mainCallback) => {
@@ -78,7 +88,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
     layoutNode.startPlayback = function () { // this === layoutNode
       layoutNode.playbackStatus = 'started'
       if (schedule.cleanup) {
-        _G.playbackLog.write(new Date().toJSON() + ' Schedule ' + schedule.id + ' requesting cleanup\n')
+        _G.playbackLog.write(new Date().toJSON() + ' Schedule ' + schedule.eid + ' requesting cleanup\n')
         playerRootNode.stopPlayback()
       }
       let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
@@ -90,10 +100,10 @@ module.exports.render = (_G, configuration, mainCallback) => {
           a.startPlayback()
         })
       }, 10)
-      setTimeout(() => {
-        nextSchedule.layoutNode.startPlayback()
-        self.stopPlayback()
-      }, nextSchedule.next - new Date())
+      // setTimeout(() => {
+      //   nextSchedule.layoutNode.startPlayback()
+      //   self.stopPlayback()
+      // }, nextSchedule.next - new Date())
     }
 
     // Playlists
