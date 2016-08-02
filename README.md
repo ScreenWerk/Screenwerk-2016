@@ -1,4 +1,5 @@
 # Screenwerk-2016
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e70ffe1eb0fb4886bf329b613ed3f263)](https://www.codacy.com/app/mihkel-putrinsh/Screenwerk-2016?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mitselek/Screenwerk-2016&amp;utm_campaign=Badge_Grade)
 
 ## Installation guide
 
