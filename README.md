@@ -3,7 +3,7 @@
 ## Installation guide
 
 ### Windows
-1. Download source from https://github.com/mitselek/Screenwerk-2016/archive/master.zip
+1. Download source from https://github.com/mitselek/Screenwerk-2016/archive/master.zip to dir c:\ScreenWerk
 2. Install Node and Git from `installers` folder
 3. Run `npm install` from application folder
   - Screenwerk will launch and close with message telling you to set up the configuration. Location of configuration file - `./local/screen.yml` -  will be opened for you in explorer
