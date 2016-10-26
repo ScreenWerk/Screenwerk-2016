@@ -230,6 +230,15 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
         mediaNode.nextMediaNode.startPlayback()
       }, swMedia.delay * 1e3))
     })
+    if (swMedia.duration) {
+      mediaNode.timers.push(setTimeout(function () {
+        console.log('mediaNode.stopPlayback() from "video duration exceeded" event.')
+        mediaNode.stopPlayback()
+        mediaNode.timers.push(setTimeout(function () {
+          mediaNode.nextMediaNode.startPlayback()
+        }, swMedia.delay * 1e3))
+      }, swMedia.duration * 1e3))
+    }
     callback()
   }
   else if (swMedia.type === _G.codes.MEDIA_TYPE_AUDIO) {
@@ -244,6 +253,15 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
         mediaNode.nextMediaNode.startPlayback()
       }, swMedia.delay * 1e3))
     })
+    if (swMedia.duration) {
+      mediaNode.timers.push(setTimeout(function () {
+        console.log('mediaNode.stopPlayback() from "audio duration exceeded" event.')
+        mediaNode.stopPlayback()
+        mediaNode.timers.push(setTimeout(function () {
+          mediaNode.nextMediaNode.startPlayback()
+        }, swMedia.delay * 1e3))
+      }, swMedia.duration * 1e3))
+    }
     callback()
   }
   else if (swMedia.type === _G.codes.MEDIA_TYPE_IMAGE) {
