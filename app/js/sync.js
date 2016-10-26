@@ -8,7 +8,9 @@ module.exports.fetchConfiguration = (_G, callback) => {
     let downloadDiv = document.createElement('div')
     downloadDiv.id = 'downloads'
     document.body.appendChild(downloadDiv)
-  }
+} else {
+    document.getElementById('downloads').style.visibility = 'hidden'
+}
 
   fs.readFile(_G.confFilePath, (err, configuration) => {
     if (err) {

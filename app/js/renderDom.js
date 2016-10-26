@@ -45,7 +45,6 @@ const getNextSchedule = (schedules) => {
 
 
 module.exports.render = (_G, configuration, mainCallback) => {
-  // document.getElementById('downloads').style.visibility = 'hidden'
   document.body.style.cursor = 'none'
   if (_G.DEV_MODE) {
     document.body.style.cursor = 'crosshair'
