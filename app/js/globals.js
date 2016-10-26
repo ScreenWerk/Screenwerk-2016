@@ -152,7 +152,7 @@ module.exports = (callback) => {
     screenEidInput.addEventListener('keyup', (e) => {
       if (/^\d+$/.test(screenEidInput.value)) {
         screenEidResult.innerHTML = screenEidInput.value
-        if (screenEidInput.value.length >= 2) {
+        if (e.keyCode === 13) {
           screenEidResult.innerHTML = 'Looking up ' + screenEidInput.value + ' ...'
 
           let responseData = ''

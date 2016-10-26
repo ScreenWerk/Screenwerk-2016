@@ -56,7 +56,7 @@ function createWindow () {
     console.log('Configured as', JSON.stringify(conf, null, 4))
   }
   catch (e) {
-    console.log('Cant read from configuration file from ' + confFilePath + '. Not a problem (yet).', e)
+    console.log('Cant read from configuration file from ' + confFilePath + '. Not a problem (yet).')
   }
 
   // Create the browser window.
