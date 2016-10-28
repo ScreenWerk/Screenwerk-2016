@@ -8,9 +8,9 @@ module.exports.fetchConfiguration = (_G, callback) => {
     let downloadDiv = document.createElement('div')
     downloadDiv.id = 'downloads'
     document.body.appendChild(downloadDiv)
-} else {
+  } else {
     document.getElementById('downloads').style.visibility = 'hidden'
-}
+  }
 
   fs.readFile(_G.confFilePath, (err, configuration) => {
     if (err) {
@@ -64,7 +64,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
         })
       } else {
         console.log('got updates')
-        console.log('_G.configurationTs = configurationTs: ' + _G.configurationTs + ' = ' + configurationTs)
+        console.log('_G.configurationTs <- configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs)
         _G.configurationTs = configurationTs
         loadMedias(_G, configuration, () => {
           fs.writeFileSync(_G.confFilePath, JSON.stringify(configuration, null, 2))
