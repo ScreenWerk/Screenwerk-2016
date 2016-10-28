@@ -181,7 +181,12 @@ module.exports.render = (_G, configuration, mainCallback) => {
         }
         insertMedia(_G, mediaNode, swMedia, callback)
       }, function (err) {
-        lastMediaNode.nextMediaNode = firstMediaNode
+        if (playlist.loop !== false) {
+          console.log('Set loop')
+          lastMediaNode.nextMediaNode = firstMediaNode
+        } else {
+          console.log('Do not loop')
+        }
         if (err) { console.error(err.message) }
         callback()
       })
