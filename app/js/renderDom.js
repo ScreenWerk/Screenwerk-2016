@@ -93,6 +93,16 @@ module.exports.render = (_G, configuration, mainCallback) => {
       }
       let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
       let self = this
+      if (schedule.duration) {
+        let sch = later.parse.cron(schedule.crontab)
+        let ms_passed = new Date() - new Date(later.schedule(sch).prev())
+        let ms_left = schedule.duration * 1e3 - ms_passed
+        // stop layouts from schedules that should already be ended
+        ms_left = (ms_left < 1e3 ? 1e3 : ms_left)
+        setTimeout(function () {
+          self.stopPlayback()
+        }, ms_left)
+      }
       setTimeout(function () {
         _G.playbackLog.write(new Date().toJSON() + ' Start layout ' + layoutNode.id + '. Play for ' + (nextSchedule.next - new Date()) + ' ms.' + '\n')
         Array.from(self.childNodes).forEach((a) => {
