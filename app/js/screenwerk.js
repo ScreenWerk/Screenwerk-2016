@@ -49,10 +49,6 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
     require(path.resolve(__dirname, 'renderDom.js')).render(_G, configuration, (err, code) => {
       if (err) { console.log(err) }
       console.log('renderer returned with code: ', code)
-      // require(path.resolve(__dirname, 'player.js')).play(_G, configuration, (err, code) => {
-      //   if (err) { console.log(err) }
-      //   console.log('player returned with code: ', code)
-      // })
     })
   }
 

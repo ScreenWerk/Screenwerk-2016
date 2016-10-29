@@ -187,6 +187,15 @@ module.exports.render = (_G, configuration, mainCallback) => {
             mediaNode.style.visibility = 'visible'
             this.firstChild.currentTime = 0
             this.firstChild.play()
+            if (swMedia.duration) {
+              mediaNode.timers.push(setTimeout(function () {
+                console.log('mediaNode.stopPlayback() from "media duration exceeded" event.')
+                mediaNode.stopPlayback()
+                mediaNode.timers.push(setTimeout(function () {
+                  mediaNode.nextMediaNode.startPlayback()
+                }, swMedia.delay * 1e3))
+              }, swMedia.duration * 1e3))
+            }
           }
         }
         insertMedia(_G, mediaNode, swMedia, callback)
@@ -245,16 +254,7 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
         mediaNode.nextMediaNode.startPlayback()
       }, swMedia.delay * 1e3))
     })
-    if (swMedia.duration) {
-      mediaNode.timers.push(setTimeout(function () {
-        console.log('mediaNode.stopPlayback() from "video duration exceeded" event.')
-        mediaNode.stopPlayback()
-        mediaNode.timers.push(setTimeout(function () {
-          mediaNode.nextMediaNode.startPlayback()
-        }, swMedia.delay * 1e3))
-      }, swMedia.duration * 1e3))
-    }
-    callback()
+    return callback()
   }
   else if (swMedia.type === _G.codes.MEDIA_TYPE_AUDIO) {
     let mediaDomElement = document.createElement('AUDIO')
@@ -268,16 +268,7 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
         mediaNode.nextMediaNode.startPlayback()
       }, swMedia.delay * 1e3))
     })
-    if (swMedia.duration) {
-      mediaNode.timers.push(setTimeout(function () {
-        console.log('mediaNode.stopPlayback() from "audio duration exceeded" event.')
-        mediaNode.stopPlayback()
-        mediaNode.timers.push(setTimeout(function () {
-          mediaNode.nextMediaNode.startPlayback()
-        }, swMedia.delay * 1e3))
-      }, swMedia.duration * 1e3))
-    }
-    callback()
+    return callback()
   }
   else if (swMedia.type === _G.codes.MEDIA_TYPE_IMAGE) {
     let mediaDomElement = document.createElement('IMG')
@@ -286,20 +277,9 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.id = mediaNode.id + '.img'
     // Properties and methods not present natively
     // mediaDomElement.currentTime = 0
-    mediaDomElement.play = () => {
-      // If duration is not set, the image will stay on screen until playlist gets cleaned
-      if (swMedia.duration) {
-        mediaNode.timers.push(setTimeout(function () {
-          console.log('mediaNode.stopPlayback() from "image ended" event.', swMedia)
-          mediaNode.stopPlayback()
-          mediaNode.timers.push(setTimeout(function () {
-            mediaNode.nextMediaNode.startPlayback()
-          }, swMedia.delay * 1e3))
-        }, swMedia.duration * 1e3))
-      }
-    }
+    mediaDomElement.play = () => {}
     mediaDomElement.pause = () => {}
-    callback()
+    return callback()
   }
   else if (swMedia.type === _G.codes.MEDIA_TYPE_URL) {
     let mediaDomElement = document.createElement('IFRAME')
@@ -309,16 +289,8 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.id = mediaNode.id + '.url'
     // Properties and methods not present natively
     // mediaDomElement.currentTime = 0
-    mediaDomElement.play = () => {
-      mediaNode.timers.push(setTimeout(function () {
-        console.log('mediaNode.stopPlayback() from "URL ended" event.')
-        mediaNode.stopPlayback()
-        mediaNode.timers.push(setTimeout(function () {
-          mediaNode.nextMediaNode.startPlayback()
-        }, swMedia.delay * 1e3))
-      }, swMedia.duration * 1e3))
-    }
+    mediaDomElement.play = () => {}
     mediaDomElement.pause = () => {}
-    callback()
+    return callback()
   }
 }

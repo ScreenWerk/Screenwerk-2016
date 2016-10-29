@@ -123,6 +123,7 @@ const loadMedias = (_G, configuration, callback) => {
               })
               .on('error', (err) => {
                 console.log(err)
+                taskCallback(err)
               })
               .on('data', (d) => {
                 downloadedSize = downloadedSize + d.length
@@ -194,7 +195,7 @@ const loadMedias = (_G, configuration, callback) => {
                   { eid: playlistMedia.mediaEid, tempFilePath: tempFilePath, filePath: filePath, url: playlistMedia.file },
                   (err) => {
                     if (err) {
-                      console.log(err)
+                      console.error(err)
                       textElement.appendChild(document.createTextNode(err))
                     }
                     callback()
