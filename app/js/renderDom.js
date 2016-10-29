@@ -78,19 +78,23 @@ module.exports.render = (_G, configuration, mainCallback) => {
     layoutNode.id = layoutNode.parentNode.id + '.' + schedule.layoutEid
     layoutNode.className = 'layout'
     layoutNode.getNextSchedule = getNextSchedule
+    layoutNode.timers = []
 
     layoutNode.stopPlayback = function () {
+      layoutNode.timers.forEach((timer) => {
+        clearTimeout(timer)
+      })
       layoutNode.playbackStatus = 'stopped'
       _G.playbackLog.write(new Date().toJSON() + ' Stop  layout ' + layoutNode.id + '\n')
       Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
     }
 
     layoutNode.startPlayback = function () { // this === layoutNode
-      layoutNode.playbackStatus = 'started'
       if (schedule.cleanup) {
         _G.playbackLog.write(new Date().toJSON() + ' Schedule ' + schedule.eid + ' requesting cleanup\n')
         playerRootNode.stopPlayback()
       }
+      layoutNode.playbackStatus = 'started'
       let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
       let self = this
       if (schedule.duration) {
@@ -103,13 +107,13 @@ module.exports.render = (_G, configuration, mainCallback) => {
           self.stopPlayback()
         }, ms_left)
       }
-      setTimeout(function () {
+      layoutNode.timers.push(setTimeout(function () {
         _G.playbackLog.write(new Date().toJSON() + ' Start layout ' + layoutNode.id + '. Play for ' + (nextSchedule.next - new Date()) + ' ms.' + '\n')
         Array.from(self.childNodes).forEach((a) => {
           // console.log(a)
           a.startPlayback()
         })
-      }, 10)
+      }, 10))
       // setTimeout(() => {
       //   nextSchedule.layoutNode.startPlayback()
       //   self.stopPlayback()
