@@ -114,10 +114,10 @@ module.exports.render = (_G, configuration, mainCallback) => {
           a.startPlayback()
         })
       }, 10))
-      // setTimeout(() => {
-      //   nextSchedule.layoutNode.startPlayback()
-      //   self.stopPlayback()
-      // }, nextSchedule.next - new Date())
+      setTimeout(() => {
+        self.stopPlayback()
+        nextSchedule.layoutNode.startPlayback()
+      }, nextSchedule.next - new Date())
     }
 
     // Playlists
