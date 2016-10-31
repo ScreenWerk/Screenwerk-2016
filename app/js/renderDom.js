@@ -106,10 +106,13 @@ module.exports.render = (_G, configuration, mainCallback) => {
       }
       layoutNode.playbackStatus = 'started'
       let self = this
+
+      // dont restart layout if less than a second left to play
       ms_until_next_playback = new Date(later.schedule(later_sched).next()) - new Date()
-      if (ms_until_next_playback < 0) {
+      if (ms_until_next_playback < 1000) {
         ms_until_next_playback = new Date(later.schedule(later_sched).next(2)[1]) - new Date()
       }
+
       // Schedule next occurrance from crontab
       setTimeout(() => {
         self.startPlayback()
