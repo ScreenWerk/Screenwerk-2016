@@ -10,7 +10,13 @@ const getOrderedSchedules = (schedules) => {
       let sched_b = later.parse.cron(schedules[b].crontab)
       schedules[a].prev = new Date(later.schedule(sched_a).prev().getTime())
       schedules[b].prev = new Date(later.schedule(sched_b).prev().getTime())
-      return schedules[a].prev > schedules[b].prev
+      return (
+        schedules[b].prev < schedules[a].prev
+        || (
+          schedules[b].prev === schedules[a].prev
+          && schedules[b].ordinal < schedules[a].ordinal
+        )
+      )
     })
     .map((a) => {
       console.log(schedules[a].prev)
@@ -28,7 +34,8 @@ const getNextSchedule = (schedules) => {
     let now = new Date()
     now.setSeconds(now.getSeconds() + 1)
     schedules[a].next = new Date(later.schedule(sched).next(1, now).getTime())
-    if (nextSchedule.next > schedules[a].next) {
+    if (schedules[a].next < nextSchedule.next
+        || (nextSchedule.next === schedules[a].next && schedules[a].ordinal < nextSchedule.ordinal)) {
       nextSchedule = schedules[a]
       console.log('Next', nextSchedule)
     }
@@ -79,6 +86,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
     layoutNode.className = 'layout'
     layoutNode.getNextSchedule = getNextSchedule
     layoutNode.timers = []
+    let later_sched = later.parse.cron(schedule.crontab)
 
     layoutNode.stopPlayback = function () {
       layoutNode.timers.forEach((timer) => {
@@ -93,31 +101,34 @@ module.exports.render = (_G, configuration, mainCallback) => {
       if (schedule.cleanup) {
         _G.playbackLog.write(new Date().toJSON() + ' Schedule ' + schedule.eid + ' requesting cleanup\n')
         playerRootNode.stopPlayback()
+      } else {
+        layoutNode.stopPlayback()
       }
       layoutNode.playbackStatus = 'started'
-      let nextSchedule = this.getNextSchedule(this.swConfiguration.schedules)
       let self = this
-      if (schedule.duration) {
-        let sch = later.parse.cron(schedule.crontab)
-        let ms_passed = new Date() - new Date(later.schedule(sch).prev())
+      ms_until_next_playback = new Date(later.schedule(later_sched).next(1, new Date).getTime())
+
+      // Schedule next occurrance from crontab
+      setTimeout(() => {
+        self.startPlayback()
+      }, ms_until_next_playback)
+
+      // Schedule might have duration less than time left until next playback
+      if (schedule.duration && schedule.duration * 1e3 < ms_until_next_playback) {
+        let ms_passed = new Date() - new Date(later.schedule(later_sched).prev())
         let ms_left = schedule.duration * 1e3 - ms_passed
-        // stop layouts from schedules that should already be ended
-        ms_left = (ms_left < 1e3 ? 1e3 : ms_left)
+        ms_left = (ms_left < 10 ? 10 : ms_left)
         setTimeout(function () {
           self.stopPlayback()
         }, ms_left)
       }
+
+      // Start layout playlists (delayed a bit to avoid simultaneous pause/play)
       layoutNode.timers.push(setTimeout(function () {
-        _G.playbackLog.write(new Date().toJSON() + ' Start layout ' + layoutNode.id + '. Play for ' + (nextSchedule.next - new Date()) + ' ms.' + '\n')
         Array.from(self.childNodes).forEach((a) => {
-          // console.log(a)
           a.startPlayback()
         })
       }, 10))
-      setTimeout(() => {
-        self.stopPlayback()
-        nextSchedule.layoutNode.startPlayback()
-      }, nextSchedule.next - new Date())
     }
 
     // Playlists
