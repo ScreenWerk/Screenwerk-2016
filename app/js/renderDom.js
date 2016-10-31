@@ -106,7 +106,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
       }
       layoutNode.playbackStatus = 'started'
       let self = this
-      ms_until_next_playback = new Date(later.schedule(later_sched).next(1, new Date).getTime())
+      ms_until_next_playback = new Date(later.schedule(later_sched).next()) - new Date()
 
       // Schedule next occurrance from crontab
       setTimeout(() => {
