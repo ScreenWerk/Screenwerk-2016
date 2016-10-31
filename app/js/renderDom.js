@@ -76,7 +76,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
   document.getElementById('player').appendChild(configurationNode)
 
   // Schedules->layouts
-  async.forEachOf(configuration.schedules, (schedule, scheduleEid, callback) => {
+  async.forEachOf(configuration.schedules, (schedule, ix, callback) => {
     schedule.layoutNode = document.createElement('div')
     let layoutNode = schedule.layoutNode
     layoutNode.swConfiguration = configuration
@@ -107,7 +107,9 @@ module.exports.render = (_G, configuration, mainCallback) => {
       layoutNode.playbackStatus = 'started'
       let self = this
       ms_until_next_playback = new Date(later.schedule(later_sched).next()) - new Date()
-
+      if (ms_until_next_playback < 0) {
+        ms_until_next_playback = new Date(later.schedule(later_sched).next(2)[1]) - new Date()
+      }
       // Schedule next occurrance from crontab
       setTimeout(() => {
         self.startPlayback()
