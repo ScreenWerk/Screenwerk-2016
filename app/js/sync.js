@@ -28,6 +28,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
       if (res.statusCode !== 200) {
         _G.playbackLog.log('statusCode: ' + res.statusCode)
         _G.playbackLog.log(res.headers)
+        _G.playbackLog.log('CALLBACK from response')
         callback(res)
       }
       else {
@@ -36,6 +37,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
     })
     .on('error', (err) => {
       _G.playbackLog.log('ERROR:', err)
+      _G.playbackLog.log('CALLBACK from error')
       callback(err)
     })
     .on('data', (d) => {
@@ -48,10 +50,12 @@ module.exports.fetchConfiguration = (_G, callback) => {
         fs.unlink(_G.tempConfFilePath, () => {
           if (configuration.error.code === 401) {
             // console.info('INFO:', data)
+            _G.playbackLog.log('CALLBACK from end conf error 401')
             callback(configuration.error, _G.codes.CONFIGURATION_NOT_AVAILABLE_YET)
           }
           else {
             console.error('ERROR:', data)
+            _G.playbackLog.log('CALLBACK from end conf error')
             callback(configuration.error, _G.codes.CONFIGURATION_FETCH_FAILED)
           }
         })
@@ -62,6 +66,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
       if (configurationTs === _G.configurationTs) {
         fs.unlink(_G.tempConfFilePath, () => {
           // _G.playbackLog.log(_G.codes.CONFIGURATION_NOT_UPDATED)
+          _G.playbackLog.log('CALLBACK from CONFIGURATION_NOT_UPDATED')
           callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })
       } else {
@@ -73,16 +78,17 @@ module.exports.fetchConfiguration = (_G, callback) => {
           fs.unlink(_G.tempConfFilePath, () => {
             async.whilst(
               () => { return document.getElementById('downloads').hasChildNodes() },
-              (callback) => {
+              (whilst_callback) => {
                 setTimeout(function () {
                   if (document.getElementById('downloads').childNodes.length) {
                     document.getElementById('downloads').removeChild(document.getElementById('downloads').lastChild)
                   }
-                  callback(null)
+                  whilst_callback(null)
                 }, 100)
               },
               (err) => {
                 if (err) _G.playbackLog.log(err)
+                _G.playbackLog.log('CALLBACK from async unlink')
                 callback(null, _G.codes.CONFIGURATION_UPDATED)
               }
             )
