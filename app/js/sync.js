@@ -47,9 +47,9 @@ module.exports.fetchConfiguration = (_G, callback) => {
       data = data + d
     })
     .on('end', () => {
-      // could it be that end event is fired twice?!
-      if (request_ended) { return }
-      request_ended = true
+      // // could it be that end event is fired twice?!
+      // if (request_ended) { return }
+      // request_ended = true
 
       let configuration = JSON.parse(data)
       if (configuration.error) {
@@ -96,6 +96,8 @@ module.exports.fetchConfiguration = (_G, callback) => {
               (err) => {
                 if (err) {
                   _G.playbackLog.log(err.message)
+                  // TODO: QUESTION: WTF:
+                  // Why are we not calling back here?
                   return
                 }
                 _G.playbackLog.log('CALLBACK from async unlink')
