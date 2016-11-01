@@ -102,14 +102,19 @@ module.exports.render = (_G, configuration, mainCallback) => {
         clearTimeout(timer)
       })
       self.playbackStatus = 'stopped'
-      _G.playbackLog.log('Stop  layout ' + self.id)
+      _G.playbackLog.log('Stop layout ' + self.swSchedule.name + ' playlists.')
       Array.from(self.childNodes).forEach((a) => { a.stopPlayback() })
     }
 
     layoutNode.startPlayback = function () { // this === layoutNode
       let self = this
+      //
+      // if (self.playbackStatus === 'stopped') {
+      //   _G.playbackLog.log('Already stopped ' + self.swSchedule.name + ' schedule')
+      //   return
+      // }
       _G.playbackLog.log('startPlayback ' + self.swSchedule.name + ' schedule')
-      if (schedule.cleanup) {
+      if (self.swSchedule.cleanup) {
         _G.playbackLog.log(self.swSchedule.name + ' requesting cleanup')
         playerRootNode.stopPlayback()
       } else if (layoutNode.playbackStatus === 'started') {
@@ -182,12 +187,22 @@ module.exports.render = (_G, configuration, mainCallback) => {
       }
 
       playlistNode.stopPlayback = function () {
+        let self = this
+        if (self.playbackStatus === 'stopped') {
+          _G.playbackLog.log('Already stopped ' + self.name + ' layoutPlaylist')
+          return
+        }
         playlistNode.playbackStatus = 'stopped'
-        _G.playbackLog.log('Stop  playlist ' + playlistNode.id)
+        _G.playbackLog.log('Stop  playlist ' + self.id)
         Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
       }
 
       playlistNode.startPlayback = function () { // this === playlistNode
+        let self = this
+        if (self.playbackStatus === 'started') {
+          _G.playbackLog.log('Already started ' + self.name + ' layoutPlaylist')
+          return
+        }
         playlistNode.playbackStatus = 'started'
         _G.playbackLog.log('Start playlist ' + playlistNode.id)
         this.firstChild.startPlayback()
@@ -214,6 +229,11 @@ module.exports.render = (_G, configuration, mainCallback) => {
         mediaNode.className = 'media'
 
         mediaNode.stopPlayback = function () {
+          let self = this
+          if (self.playbackStatus === 'stopped') {
+            _G.playbackLog.log('Already stopped ' + self.name + ' playlistMedias')
+            return
+          }
           mediaNode.timers.forEach((timer) => {
             clearTimeout(timer)
           })
@@ -225,25 +245,41 @@ module.exports.render = (_G, configuration, mainCallback) => {
         }
 
         mediaNode.startPlayback = function () { // this === mediaNode
-          if (mediaNode.playlistNode.playbackStatus === 'started') {
-            mediaNode.playbackStatus = 'started'
-            _G.playbackLog.log('Start media ' + mediaNode.id)
-            mediaNode.style.visibility = 'visible'
-            this.firstChild.currentTime = 0
+          let self = this
+          if (self.playbackStatus === 'started') {
+            _G.playbackLog.log('Already started ' + self.name + ' playlistMedias')
+            return
+          }
+          if (mediaNode.playlistNode.playbackStatus !== 'started') {
+            _G.playbackLog.log('Cant start ' + self.name + ' playlistMedias in stopped playlist')
+            return
+          }
+          mediaNode.playbackStatus = 'started'
+          _G.playbackLog.log('Start media ' + mediaNode.id)
+          mediaNode.style.visibility = 'visible'
+          this.firstChild.currentTime = 0
+          try {
             this.firstChild.play()
-            if (swMedia.duration) {
-              mediaNode.timers.push(setTimeout(function () {
-                _G.playbackLog.log('mediaNode.stopPlayback() from "media duration exceeded" event.')
-                mediaNode.stopPlayback()
-                if (mediaNode.nextMediaNode) {
-                  mediaNode.timers.push(setTimeout(function () {
-                    mediaNode.nextMediaNode.startPlayback()
-                  }, swMedia.delay * 1e3))
-                } else {
-                  _G.playbackLog.log('Playlist finished. No next media to load.')
-                }
-              }, swMedia.duration * 1e3))
-            }
+          } catch (err) {
+            console.log(err)
+            _G.playbackLog.log('media.play() errored for ' + mediaNode.id + '.', err)
+          }
+            // .catch( function(reason) {
+            //   console.log(reason)
+            //   _G.playbackLog.log('media.play() errored for ' + mediaNode.id + '.', reason)
+            // })
+          if (swMedia.duration) {
+            mediaNode.timers.push(setTimeout(function () {
+              _G.playbackLog.log('mediaNode.stopPlayback() from "media duration exceeded" event.')
+              mediaNode.stopPlayback()
+              if (mediaNode.nextMediaNode) {
+                mediaNode.timers.push(setTimeout(function () {
+                  mediaNode.nextMediaNode.startPlayback()
+                }, swMedia.delay * 1e3))
+              } else {
+                _G.playbackLog.log('Playlist finished. No next media to load.')
+              }
+            }, swMedia.duration * 1e3))
           }
         }
         insertMedia(_G, mediaNode, swMedia, callback)

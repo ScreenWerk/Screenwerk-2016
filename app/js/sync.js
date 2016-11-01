@@ -14,15 +14,15 @@ module.exports.fetchConfiguration = (_G, callback) => {
 
   fs.readFile(_G.confFilePath, (err, configuration) => {
     if (err) {
-      console.log(err)
+      _G.playbackLog.log(err)
     }
     else {
       _G.configurationTs = (new Date(JSON.parse(configuration).publishedAt)).getTime()
-      // console.log(_G.configurationTs)
+      // _G.playbackLog.log(_G.configurationTs)
     }
 
     let data = ''
-    console.log('Requesting ' + _G.SCREENWERK_API + _G.SCREEN_EID)
+    _G.playbackLog.log('Requesting ' + _G.SCREENWERK_API + _G.SCREEN_EID)
     request(_G.SCREENWERK_API + _G.SCREEN_EID)
     .on('response', (res) => {
       if (res.statusCode !== 200) {
@@ -34,7 +34,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
       }
     })
     .on('error', (err) => {
-      console.error('ERROR:', err)
+      _G.playbackLog.log('ERROR:', err)
       callback(err)
     })
     .on('data', (d) => {
@@ -60,12 +60,12 @@ module.exports.fetchConfiguration = (_G, callback) => {
       let configurationTs = new Date(configuration.publishedAt).getTime()
       if (configurationTs === _G.configurationTs) {
         fs.unlink(_G.tempConfFilePath, () => {
-          // console.log(_G.codes.CONFIGURATION_NOT_UPDATED)
+          // _G.playbackLog.log(_G.codes.CONFIGURATION_NOT_UPDATED)
           callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })
       } else {
-        console.log('got updates')
-        console.log('_G.configurationTs <- configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs)
+        _G.playbackLog.log('got updates')
+        _G.playbackLog.log('_G.configurationTs <- configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs)
         _G.configurationTs = configurationTs
         loadMedias(_G, configuration, () => {
           fs.writeFileSync(_G.confFilePath, JSON.stringify(configuration, null, 2))
@@ -81,7 +81,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
                 }, 100)
               },
               (err) => {
-                if (err) console.log(err)
+                if (err) _G.playbackLog.log(err)
                 callback(null, _G.codes.CONFIGURATION_UPDATED)
               }
             )
@@ -116,14 +116,14 @@ const loadMedias = (_G, configuration, callback) => {
           if (err) {
             request(task.url)
               .on('response', (res) => {
-                console.log(res.headers)
+                _G.playbackLog.log(res.headers)
                 fileSize = res.headers['content-length']
                 var textNode = document.createTextNode('; ' + bytesToSize(fileSize) + ' to download.')
                 document.getElementById(task.eid).appendChild(textNode)
                 document.getElementById(task.eid).appendChild(progressBar)
               })
               .on('error', (err) => {
-                console.log(err)
+                _G.playbackLog.log(err)
                 taskCallback(err)
               })
               .on('data', (d) => {
