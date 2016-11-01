@@ -23,13 +23,14 @@ module.exports.fetchConfiguration = (_G, callback) => {
 
     let data = ''
     _G.playbackLog.log('Requesting ' + _G.SCREENWERK_API + _G.SCREEN_EID)
+    let request_ended = false
     request(_G.SCREENWERK_API + _G.SCREEN_EID)
     .on('response', (res) => {
       if (res.statusCode !== 200) {
         _G.playbackLog.log('statusCode: ' + res.statusCode)
         _G.playbackLog.log(res.headers)
         _G.playbackLog.log('CALLBACK from response')
-        callback(res)
+        return callback(res)
       }
       else {
         // console.info('statusCode: ', res.statusCode, 'headers: ', res.headers)
@@ -38,12 +39,16 @@ module.exports.fetchConfiguration = (_G, callback) => {
     .on('error', (err) => {
       _G.playbackLog.log('ERROR:', err)
       _G.playbackLog.log('CALLBACK from error')
-      callback(err)
+      return callback(err)
     })
     .on('data', (d) => {
       data = data + d
     })
     .on('end', () => {
+      // could it be that end event is fired twice?!
+      // if (request_ended) { return }
+      // request_ended = true
+
       let configuration = JSON.parse(data)
       if (configuration.error) {
         // window.alert(data)
@@ -51,15 +56,15 @@ module.exports.fetchConfiguration = (_G, callback) => {
           if (configuration.error.code === 401) {
             // console.info('INFO:', data)
             _G.playbackLog.log('CALLBACK from end conf error 401')
-            callback(configuration.error, _G.codes.CONFIGURATION_NOT_AVAILABLE_YET)
+            return callback(configuration.error, _G.codes.CONFIGURATION_NOT_AVAILABLE_YET)
           }
           else {
             console.error('ERROR:', data)
             _G.playbackLog.log('CALLBACK from end conf error')
-            callback(configuration.error, _G.codes.CONFIGURATION_FETCH_FAILED)
+            return callback(configuration.error, _G.codes.CONFIGURATION_FETCH_FAILED)
           }
         })
-        return
+        // return
       }
       // console.info('INFO:', data)
       let configurationTs = new Date(configuration.publishedAt).getTime()
@@ -67,7 +72,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
         fs.unlink(_G.tempConfFilePath, () => {
           // _G.playbackLog.log(_G.codes.CONFIGURATION_NOT_UPDATED)
           _G.playbackLog.log('CALLBACK from CONFIGURATION_NOT_UPDATED')
-          callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
+          return callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })
       } else {
         _G.playbackLog.log('got updates')
@@ -89,7 +94,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
               (err) => {
                 if (err) _G.playbackLog.log(err)
                 _G.playbackLog.log('CALLBACK from async unlink')
-                callback(null, _G.codes.CONFIGURATION_UPDATED)
+                return callback(null, _G.codes.CONFIGURATION_UPDATED)
               }
             )
           })
