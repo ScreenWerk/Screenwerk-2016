@@ -27,6 +27,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
     .on('response', (res) => {
       if (res.statusCode !== 200) {
         console.error('statusCode: ', res.statusCode, 'headers: ', res.headers)
+        callback(res)
       }
       else {
         // console.info('statusCode: ', res.statusCode, 'headers: ', res.headers)
