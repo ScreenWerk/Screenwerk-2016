@@ -235,9 +235,13 @@ module.exports.render = (_G, configuration, mainCallback) => {
               mediaNode.timers.push(setTimeout(function () {
                 _G.playbackLog.log('mediaNode.stopPlayback() from "media duration exceeded" event.')
                 mediaNode.stopPlayback()
-                mediaNode.timers.push(setTimeout(function () {
-                  mediaNode.nextMediaNode.startPlayback()
-                }, swMedia.delay * 1e3))
+                if (mediaNode.nextMediaNode) {
+                  mediaNode.timers.push(setTimeout(function () {
+                    mediaNode.nextMediaNode.startPlayback()
+                  }, swMedia.delay * 1e3))
+                } else {
+                  _G.playbackLog.log('Playlist finished. No next media to load.')
+                }
               }, swMedia.duration * 1e3))
             }
           }
