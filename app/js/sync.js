@@ -177,8 +177,8 @@ const loadMedias = (_G, configuration, callback) => {
     document.getElementById('downloads').appendChild(document.createElement('hr'))
     document.getElementById('downloads').appendChild(document.createTextNode('all items have been processed'))
     document.getElementById('downloads').appendChild(document.createElement('hr'))
-    _G.playbackLog.log('SYN| = CALLBACK from medias drained')
-    callback(null)
+    _G.playbackLog.log('SYN| = medias drained')
+    // callback(null)
   }
 
   async.each(configuration.schedules, (schedule, callback) => {
