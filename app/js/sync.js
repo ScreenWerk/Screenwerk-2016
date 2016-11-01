@@ -26,7 +26,8 @@ module.exports.fetchConfiguration = (_G, callback) => {
     request(_G.SCREENWERK_API + _G.SCREEN_EID)
     .on('response', (res) => {
       if (res.statusCode !== 200) {
-        console.error('statusCode: ', res.statusCode, 'headers: ', res.headers)
+        _G.playbackLog.log('statusCode: ' + res.statusCode)
+        _G.playbackLog.log(res.headers)
         callback(res)
       }
       else {

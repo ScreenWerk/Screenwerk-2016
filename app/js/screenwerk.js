@@ -45,10 +45,10 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
 
   function playConfiguration (_G, configuration) {
     document.getElementById('lastUpdatedAt').innerHTML = new Date(configuration.publishedAt).toString()
-    console.log('Lets play it!!!', configuration.publishedAt)
+    _G.playbackLog.log('Lets play it!!!', configuration.publishedAt)
     require(path.resolve(__dirname, 'renderDom.js')).render(_G, configuration, (err, code) => {
-      if (err) { console.log(err) }
-      console.log('renderer returned with code: ', code)
+      if (err) { _G.playbackLog.log(err) }
+      _G.playbackLog.log('renderer returned with code: ', code)
     })
   }
 
@@ -59,7 +59,7 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
       // console.log('fetchConfiguration returned with', code)
       if (code === _G.codes.CONFIGURATION_UPDATED) {
         fs.readFile(_G.confFilePath, (err, configuration) => {
-          if (err) { console.log(err) }
+          if (err) { _G.playbackLog.log(err) }
           playConfiguration(_G, JSON.parse(configuration))
         })
       }

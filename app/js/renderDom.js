@@ -238,7 +238,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
             clearTimeout(timer)
           })
           mediaNode.playbackStatus = 'stopped'
-          _G.playbackLog.log('Stop  media ' + mediaNode.id)
+          _G.playbackLog.log('Stop  media ' + mediaNode.id + ' ' + mediaNode.swMedia.name)
           mediaNode.style.visibility = 'hidden'
           this.firstChild.pause()
           this.firstChild.currentTime = 0
@@ -255,7 +255,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
             return
           }
           mediaNode.playbackStatus = 'started'
-          _G.playbackLog.log('Start media ' + mediaNode.id)
+          _G.playbackLog.log('Start media ' + mediaNode.id + ' ' + mediaNode.swMedia.name)
           mediaNode.style.visibility = 'visible'
           this.firstChild.currentTime = 0
           try {
