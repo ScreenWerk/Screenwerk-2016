@@ -81,22 +81,12 @@ module.exports.fetchConfiguration = (_G, callback) => {
         loadMedias(_G, configuration, () => {
           fs.writeFileSync(_G.confFilePath, JSON.stringify(configuration, null, 2))
           fs.unlink(_G.tempConfFilePath, () => {
-            async.whilst(
-              () => { return document.getElementById('downloads').hasChildNodes() },
-              (whilst_callback) => {
-                setTimeout(function () {
-                  if (document.getElementById('downloads').childNodes.length) {
-                    document.getElementById('downloads').removeChild(document.getElementById('downloads').lastChild)
-                  }
-                  whilst_callback(null)
-                }, 100)
-              },
-              (err) => {
-                if (err) _G.playbackLog.log(err)
-                _G.playbackLog.log('CALLBACK from async unlink')
-                return callback(null, _G.codes.CONFIGURATION_UPDATED)
-              }
-            )
+            var myNode = document.getElementById('downloads')
+            while (myNode.firstChild) {
+                myNode.removeChild(myNode.firstChild)
+            }
+            _G.playbackLog.log('CALLBACK from async unlink')
+            return callback(null, _G.codes.CONFIGURATION_UPDATED)
           })
         })
       }
