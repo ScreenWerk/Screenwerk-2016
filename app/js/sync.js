@@ -29,18 +29,18 @@ module.exports.fetchConfiguration = (_G, callback) => {
     .on('response', (res) => {
       if (res.statusCode !== 200) {
         _G.playbackLog.log('statusCode: ' + res.statusCode)
-        _G.playbackLog.log(res.headers)
-        _G.playbackLog.log('CALLBACK from response')
+        // _G.playbackLog.log(res.headers)
+        _G.playbackLog.log(' = CALLBACK from response !200')
         return callback(res)
       }
       else {
         _G.playbackLog.log('statusCode: ' + res.statusCode)
-        _G.playbackLog.log(res.headers)
+        // _G.playbackLog.log(res.headers)
       }
     })
     .on('error', (err) => {
       _G.playbackLog.log('ERROR:', err)
-      _G.playbackLog.log('CALLBACK from error')
+      _G.playbackLog.log(' = CALLBACK from error')
       return callback(err)
     })
     .on('data', (d) => {
@@ -57,12 +57,12 @@ module.exports.fetchConfiguration = (_G, callback) => {
         fs.unlink(_G.tempConfFilePath, () => {
           if (configuration.error.code === 401) {
             // console.info('INFO:', data)
-            _G.playbackLog.log('CALLBACK from end conf error 401')
+            _G.playbackLog.log(' = CALLBACK from end conf error 401')
             return callback(configuration.error, _G.codes.CONFIGURATION_NOT_AVAILABLE_YET)
           }
           else {
-            console.error('ERROR:', data)
-            _G.playbackLog.log('CALLBACK from end conf error')
+            // console.error('ERROR:', data)
+            _G.playbackLog.log(' = CALLBACK from end conf error')
             return callback(configuration.error, _G.codes.CONFIGURATION_FETCH_FAILED)
           }
         })
@@ -73,7 +73,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
       if (configurationTs === _G.configurationTs) {
         fs.unlink(_G.tempConfFilePath, () => {
           // _G.playbackLog.log(_G.codes.CONFIGURATION_NOT_UPDATED)
-          _G.playbackLog.log('CALLBACK from CONFIGURATION_NOT_UPDATED')
+          _G.playbackLog.log(' = CALLBACK from CONFIGURATION_NOT_UPDATED')
           return callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })
       } else {
@@ -95,12 +95,12 @@ module.exports.fetchConfiguration = (_G, callback) => {
               },
               (err) => {
                 if (err) {
-                  _G.playbackLog.log(err.message)
+                  _G.playbackLog.log('removing progressbars errored somehow')
                   // TODO: QUESTION: WTF:
                   // Why are we not calling back here?
                   return
                 }
-                _G.playbackLog.log('CALLBACK from async unlink')
+                _G.playbackLog.log(' = CALLBACK from async unlink')
                 return callback(null, _G.codes.CONFIGURATION_UPDATED)
               }
             )
