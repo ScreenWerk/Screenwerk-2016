@@ -15,7 +15,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
 
   fs.readFile(_G.confFilePath, (err, configuration) => {
     if (err) {
-      _G.playbackLog.log(err)
+      _G.playbackLog.log('SYN|readFile errored')
     }
     else {
       _G.configurationTs = (new Date(JSON.parse(configuration).publishedAt)).getTime()
@@ -39,7 +39,6 @@ module.exports.fetchConfiguration = (_G, callback) => {
       }
     })
     .on('error', (err) => {
-      _G.playbackLog.log('SYN|ERROR:', err)
       _G.playbackLog.log('SYN| = CALLBACK from error')
       return callback(err)
     })
@@ -135,14 +134,14 @@ const loadMedias = (_G, configuration, callback) => {
           if (err) {
             request(task.url)
               .on('response', (res) => {
-                _G.playbackLog.log(res.headers)
+                // _G.playbackLog.log(res.headers)
                 fileSize = res.headers['content-length']
                 var textNode = document.createTextNode('; ' + bytesToSize(fileSize) + ' to download.')
                 document.getElementById(task.eid).appendChild(textNode)
                 document.getElementById(task.eid).appendChild(progressBar)
               })
               .on('error', (err) => {
-                _G.playbackLog.log(err)
+                _G.playbackLog.log('request errored with ' + task.url)
                 taskCallback(err)
               })
               .on('data', (d) => {

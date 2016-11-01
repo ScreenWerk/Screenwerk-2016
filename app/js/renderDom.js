@@ -88,7 +88,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
     layoutNode.swSchedule = schedule
     layoutNode.timers = []
     let later_sched = later.parse.cron(schedule.crontab)
-    _G.playbackLog.log(layoutNode.swSchedule.name + ' initialized.')
+    _G.playbackLog.log('RD|' + layoutNode.swSchedule.name + ' initialized.')
 
     layoutNode.stopPlayback = function () { // this === layoutNode
       let self = this
@@ -115,7 +115,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
       // }
       _G.playbackLog.log('RD|startPlayback ' + self.swSchedule.name + ' schedule')
       if (self.swSchedule.cleanup) {
-        _G.playbackLog.log(self.swSchedule.name + ' requesting cleanup')
+        _G.playbackLog.log('RD|' + self.swSchedule.name + ' requesting cleanup')
         playerRootNode.stopPlayback()
       } else if (layoutNode.playbackStatus === 'started') {
         self.stopPlayback()
@@ -153,7 +153,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
           }, ms_left)
         }
         self.playbackStatus = 'started'
-        _G.playbackLog.log(self.swSchedule.name + ' layout status = "started".')
+        _G.playbackLog.log('RD|' + self.swSchedule.name + ' layout status = "started".')
 
         // Start layout playlists (delayed a bit to avoid simultaneous pause/play)
         layoutNode.timers.push(setTimeout(function () {
@@ -300,7 +300,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
   }, function (err) {
     if (err) { console.error(err.message) }
     mainCallback(null, _G.codes.DOM_RENDERED)
-    _G.playbackLog.log(_G.codes.DOM_RENDERED)
+    _G.playbackLog.log('RD|' + _G.codes.DOM_RENDERED)
     getOrderedSchedules(configuration.schedules)
       .forEach((a) => {
         _G.playbackLog.log('RD|Start playback of ' + a.name)
@@ -317,7 +317,7 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement = document.createElement('VIDEO')
     let mimetype = 'video/' + swMedia.fileName.split('.')[swMedia.fileName.split('.').length - 1]
     mediaDomElement.type = mimetype
-    // _G.playbackLog.log(mimetype)
+    // _G.playbackLog.log('RD|' + mimetype)
     mediaDomElement.src = path.resolve(_G.MEDIA_DIR, swMedia.mediaEid.toString())
     mediaDomElement.overflow = 'hidden'
     mediaDomElement.autoplay = false
