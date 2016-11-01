@@ -4,6 +4,7 @@ const request = require('request')
 const fs = require('fs')
 
 module.exports.fetchConfiguration = (_G, callback) => {
+  _G.playbackLog.log('= = = ENTER fetchConfiguration')
   if (document.getElementById('downloads') === null) {
     let downloadDiv = document.createElement('div')
     downloadDiv.id = 'downloads'
@@ -33,7 +34,8 @@ module.exports.fetchConfiguration = (_G, callback) => {
         return callback(res)
       }
       else {
-        // console.info('statusCode: ', res.statusCode, 'headers: ', res.headers)
+        _G.playbackLog.log('statusCode: ' + res.statusCode)
+        _G.playbackLog.log(res.headers)
       }
     })
     .on('error', (err) => {

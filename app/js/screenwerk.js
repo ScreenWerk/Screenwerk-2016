@@ -24,7 +24,7 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
         }
         sync.fetchConfiguration(_G, (err, code) => {
           if (err) {
-            console.log(err)
+            _G.playbackLog.log(err)
           }
           // console.log('fetchConfiguration returned with', code)
           return callback(code)
