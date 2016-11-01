@@ -218,7 +218,6 @@ const loadMedias = (_G, configuration, callback) => {
                       console.error(err)
                       textElement.appendChild(document.createTextNode(err))
                     }
-                    _G.playbackLog.log('SYN| = CALLBACK loadMedias 1')
                     callback()
                   }
                 )
@@ -227,29 +226,24 @@ const loadMedias = (_G, configuration, callback) => {
                 progressBar.style['background-color'] = 'green'
                 progressBar.style.height = '2px'
                 progressBar.style.width = '100%'
-                _G.playbackLog.log('SYN| = CALLBACK loadMedias 2')
                 callback()
               }
             })
           } else { // Media file already downloading.
             document.getElementById(playlistMedia.mediaEid).appendChild(document.createTextNode('; file already downloading: ' + tempFilePath))
-            _G.playbackLog.log('SYN| = CALLBACK loadMedias 3')
             callback()
           }
         })
       }, function (err) {
         if (err) { console.error(err.message) }
-        _G.playbackLog.log('SYN| = CALLBACK loadMedias 4')
         callback()
       })
     }, function (err) {
       if (err) { console.error(err.message) }
-      _G.playbackLog.log('SYN| = CALLBACK loadMedias 5')
       callback()
     })
   }, function (err) {
     if (err) { console.error(err.message) }
-    _G.playbackLog.log('SYN| = CALLBACK loadMedias 6')
     callback()
   })
 }
