@@ -94,7 +94,10 @@ module.exports.fetchConfiguration = (_G, callback) => {
                 }, 100)
               },
               (err) => {
-                if (err) _G.playbackLog.log(err)
+                if (err) {
+                  _G.playbackLog.log(err.message)
+                  return
+                }
                 _G.playbackLog.log('CALLBACK from async unlink')
                 return callback(null, _G.codes.CONFIGURATION_UPDATED)
               }
