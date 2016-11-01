@@ -59,7 +59,12 @@ module.exports = (callback) => {
 
   _G.playbackLog = fs.createWriteStream(path.resolve(_G.HOME_PATH, 'playback.log'))
   _G.playbackLog.setDefaultEncoding('utf8')
-  _G.playbackLog.write(new Date().toJSON() + ' ' + _G.packageJson.productName + ' version ' + _G.packageJson.version + '\n')
+  _G.playbackLog.log = function(text) {
+    let now = new Date().toJSON().slice(11).replace(/[TZ]/g, ' ')
+    _G.playbackLog.write(now + text + '\n')
+  }
+
+  _G.playbackLog.log(_G.packageJson.productName + ' version ' + _G.packageJson.version)
 
   function closeWithMessage (message) {
     window.alert(message)
