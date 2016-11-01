@@ -77,7 +77,7 @@ function createWindow () {
     process.env.DEBUG = '*'
   } else {
     mainWindow.setFullScreen(true)
-    // mainWindow.setKiosk(true)
+    mainWindow.setKiosk(true)
   }
   if (skipTaskbar) {
     mainWindow.setSkipTaskbar(skipTaskbar)
