@@ -69,8 +69,7 @@ function createWindow () {
   displayNum --
   let display = displays[displayNum]
 
-  let geometry = conf.GEOMETRY || { x: display.bounds.x, y: display.bounds.y, width: 900, height: 600 }
-  mainWindow = new BrowserWindow(geometry)
+  mainWindow = new BrowserWindow({ x: display.bounds.x, y: display.bounds.y, width: 900, height: 600 })
   mainWindow.setMenu(null)
   if (devMode) {
     mainWindow.setFullScreen(false)
