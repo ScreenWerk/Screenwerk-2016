@@ -3,7 +3,7 @@ const fs = require('fs')
 const later = require('later')
 const path = require('path')
 
-const getOrderedSchedules = (schedules) => {
+const getOrderedSchedules = (_G, schedules) => {
   return Object.keys(schedules)
     .sort((a, b) => {
       let sched_a = later.parse.cron(schedules[a].crontab)
@@ -19,36 +19,10 @@ const getOrderedSchedules = (schedules) => {
       )
     })
     .map((a) => {
-      console.log(schedules[a].prev)
+      _G.playbackLog.log(schedules[a])
       return schedules[a]
     })
 }
-
-// const getNextSchedule = (schedules) => {
-//   let nextSchedule = schedules[Object.keys(schedules)[0]]
-//   console.log('Set next', nextSchedule)
-//   Object.keys(schedules).forEach((a) => {
-//     console.log('Test', schedules[a])
-//     let crtab = schedules[a].crontab
-//     let sched = later.parse.cron(crtab)
-//     let now = new Date()
-//     now.setSeconds(now.getSeconds() + 1)
-//     schedules[a].next = new Date(later.schedule(sched).next(1, now).getTime())
-//     if (schedules[a].next < nextSchedule.next
-//         || (nextSchedule.next === schedules[a].next && schedules[a].ordinal < nextSchedule.ordinal)) {
-//       nextSchedule = schedules[a]
-//       console.log('Next', nextSchedule)
-//     }
-//   })
-//   return nextSchedule
-// }
-
-// const getNextEventDelayMs = (schedule) => {
-//   let crtab = schedule.crontab
-//   let sched = later.parse.cron(crtab)
-//   let now = new Date()
-//   _G.playbackLog.log(later.schedule(sched).next(1, now).getTime())
-// }
 
 
 module.exports.render = (_G, configuration, mainCallback) => {
@@ -261,7 +235,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
           try {
             this.firstChild.play()
           } catch (err) {
-            console.log(err)
+            _G.playbackLog.log(err)
             _G.playbackLog.log('RD|media.play() errored for ' + mediaNode.id + '.', err)
           }
             // .catch( function(reason) {
@@ -301,7 +275,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
     if (err) { console.error(err.message) }
     mainCallback(null, _G.codes.DOM_RENDERED)
     _G.playbackLog.log('RD|' + _G.codes.DOM_RENDERED)
-    getOrderedSchedules(configuration.schedules)
+    getOrderedSchedules(_G, configuration.schedules)
       .forEach((a) => {
         _G.playbackLog.log('RD|Start playback of ' + a.name)
         a.layoutNode.startPlayback()
