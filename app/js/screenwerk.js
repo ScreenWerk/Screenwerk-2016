@@ -38,14 +38,19 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
     if (code === _G.codes.CONFIGURATION_FILE_OK) {
       playConfiguration(_G, jsonData)
       pollUpdates(_G)
-      return console.info(code)
+      _G.playbackLog.log(code)
+      return
     }
-    return console.info(code)
+    _G.playbackLog.log(code)
+    return
   })
+
 
   function playConfiguration (_G, configuration) {
     document.getElementById('lastUpdatedAt').innerHTML = new Date(configuration.publishedAt).toString()
-    _G.playbackLog.log('Lets play it!!!', configuration.publishedAt)
+    let screen_id = ['SG' + configuration['screenGroupEid'], 'CNF' + configuration['configurationEid'], 'SCR' + configuration['screenEid']].join('.')
+    _G.playbackLog.log('Lets play', screen_id + ' @ ' + configuration['publishedAt'])
+    _G.playbackLog.log('<=- Structure of ID\'s', 'shedule.layout.playlist.media')
     require(path.resolve(__dirname, 'renderDom.js')).render(_G, configuration, (err, code) => {
       if (err) { _G.playbackLog.log('renderer errored') }
       _G.playbackLog.log('renderer returned with code: ' + code)

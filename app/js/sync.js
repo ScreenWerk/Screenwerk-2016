@@ -4,7 +4,7 @@ const request = require('request')
 const fs = require('fs')
 
 module.exports.fetchConfiguration = (_G, callback) => {
-  _G.playbackLog.log('SYN|= = = ENTER fetchConfiguration')
+  _G.playbackLog.log('= = = ENTER fetchConfiguration')
   if (document.getElementById('downloads') === null) {
     let downloadDiv = document.createElement('div')
     downloadDiv.id = 'downloads'
@@ -15,7 +15,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
 
   fs.readFile(_G.confFilePath, (err, configuration) => {
     if (err) {
-      _G.playbackLog.log('SYN|readFile errored')
+      _G.playbackLog.log('readFile errored')
     }
     else {
       _G.configurationTs = (new Date(JSON.parse(configuration).publishedAt)).getTime()
@@ -23,23 +23,23 @@ module.exports.fetchConfiguration = (_G, callback) => {
     }
 
     let data = ''
-    _G.playbackLog.log('SYN|Requesting ' + _G.SCREENWERK_API + _G.SCREEN_EID)
+    _G.playbackLog.log('Requesting ' + _G.SCREENWERK_API + _G.SCREEN_EID)
     let request_ended = false
     request(_G.SCREENWERK_API + _G.SCREEN_EID)
     .on('response', (res) => {
       if (res.statusCode !== 200) {
-        _G.playbackLog.log('SYN|statusCode: ' + res.statusCode)
+        _G.playbackLog.log('statusCode: ' + res.statusCode)
         // _G.playbackLog.log(res.headers)
-        _G.playbackLog.log('SYN| = CALLBACK from response !200')
+        _G.playbackLog.log(' = CALLBACK from response !200')
         return callback(res)
       }
       else {
-        _G.playbackLog.log('SYN|statusCode: ' + res.statusCode)
+        _G.playbackLog.log('statusCode: ' + res.statusCode)
         // _G.playbackLog.log(res.headers)
       }
     })
     .on('error', (err) => {
-      _G.playbackLog.log('SYN| = CALLBACK from error')
+      _G.playbackLog.log(' = CALLBACK from error')
       return callback(err)
     })
     .on('data', (d) => {
@@ -56,12 +56,12 @@ module.exports.fetchConfiguration = (_G, callback) => {
         fs.unlink(_G.tempConfFilePath, () => {
           if (configuration.error.code === 401) {
             // console.info('INFO:', data)
-            _G.playbackLog.log('SYN| = CALLBACK from end conf error 401')
+            _G.playbackLog.log(' = CALLBACK from end conf error 401')
             return callback(configuration.error, _G.codes.CONFIGURATION_NOT_AVAILABLE_YET)
           }
           else {
             // console.error('ERROR:', data)
-            _G.playbackLog.log('SYN| = CALLBACK from end conf error')
+            _G.playbackLog.log(' = CALLBACK from end conf error')
             return callback(configuration.error, _G.codes.CONFIGURATION_FETCH_FAILED)
           }
         })
@@ -72,12 +72,12 @@ module.exports.fetchConfiguration = (_G, callback) => {
       if (configurationTs === _G.configurationTs) {
         fs.unlink(_G.tempConfFilePath, () => {
           // _G.playbackLog.log(_G.codes.CONFIGURATION_NOT_UPDATED)
-          _G.playbackLog.log('SYN| = CALLBACK from CONFIGURATION_NOT_UPDATED')
+          _G.playbackLog.log(' = CALLBACK from CONFIGURATION_NOT_UPDATED')
           return callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })
       } else {
-        _G.playbackLog.log('SYN|got updates')
-        _G.playbackLog.log('SYN|_G.configurationTs <- configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs)
+        _G.playbackLog.log('got updates')
+        _G.playbackLog.log('_G.configurationTs <- configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs)
         _G.configurationTs = configurationTs
         loadMedias(_G, configuration, () => {
           fs.writeFileSync(_G.confFilePath, JSON.stringify(configuration, null, 2))
@@ -94,12 +94,12 @@ module.exports.fetchConfiguration = (_G, callback) => {
               },
               (err) => {
                 if (err) {
-                  _G.playbackLog.log('SYN|removing progressbars errored somehow')
+                  _G.playbackLog.log('removing progressbars errored somehow')
                   // TODO: QUESTION: WTF:
                   // Why are we not calling back here?
                   return
                 }
-                _G.playbackLog.log('SYN| = CALLBACK from async unlink')
+                _G.playbackLog.log(' = CALLBACK from async unlink')
                 return callback(null, _G.codes.CONFIGURATION_UPDATED)
               }
             )
@@ -177,7 +177,7 @@ const loadMedias = (_G, configuration, callback) => {
     document.getElementById('downloads').appendChild(document.createElement('hr'))
     document.getElementById('downloads').appendChild(document.createTextNode('all items have been processed'))
     document.getElementById('downloads').appendChild(document.createElement('hr'))
-    _G.playbackLog.log('SYN| = medias drained')
+    _G.playbackLog.log(' = medias drained')
     // callback(null)
   }
 

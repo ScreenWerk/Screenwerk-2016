@@ -3,7 +3,7 @@ const fs = require('fs')
 const later = require('later')
 const path = require('path')
 
-const getOrderedSchedules = (schedules) => {
+const getOrderedSchedules = (_G, schedules) => {
   return Object.keys(schedules)
     .sort((a, b) => {
       let sched_a = later.parse.cron(schedules[a].crontab)
@@ -19,36 +19,10 @@ const getOrderedSchedules = (schedules) => {
       )
     })
     .map((a) => {
-      console.log(schedules[a].prev)
+      // _G.playbackLog.log(schedules[a])
       return schedules[a]
     })
 }
-
-// const getNextSchedule = (schedules) => {
-//   let nextSchedule = schedules[Object.keys(schedules)[0]]
-//   console.log('Set next', nextSchedule)
-//   Object.keys(schedules).forEach((a) => {
-//     console.log('Test', schedules[a])
-//     let crtab = schedules[a].crontab
-//     let sched = later.parse.cron(crtab)
-//     let now = new Date()
-//     now.setSeconds(now.getSeconds() + 1)
-//     schedules[a].next = new Date(later.schedule(sched).next(1, now).getTime())
-//     if (schedules[a].next < nextSchedule.next
-//         || (nextSchedule.next === schedules[a].next && schedules[a].ordinal < nextSchedule.ordinal)) {
-//       nextSchedule = schedules[a]
-//       console.log('Next', nextSchedule)
-//     }
-//   })
-//   return nextSchedule
-// }
-
-// const getNextEventDelayMs = (schedule) => {
-//   let crtab = schedule.crontab
-//   let sched = later.parse.cron(crtab)
-//   let now = new Date()
-//   _G.playbackLog.log(later.schedule(sched).next(1, now).getTime())
-// }
 
 
 module.exports.render = (_G, configuration, mainCallback) => {
@@ -57,6 +31,12 @@ module.exports.render = (_G, configuration, mainCallback) => {
     document.body.style.cursor = 'crosshair'
   }
   while (document.getElementById('player').hasChildNodes()) {
+    if (typeof document.getElementById('player').lastChild.stopPlayback === 'function') {
+      _G.playbackLog.log('stopPlayback before removeChild', document.getElementById('player').lastChild.id)
+      document.getElementById('player').lastChild.stopPlayback()
+    } else {
+      _G.playbackLog.log('No stopPlayback function', document.getElementById('player').lastChild.id)
+    }
     document.getElementById('player').removeChild(document.getElementById('player').lastChild)
   }
   let playerRootNode = document.createElement('div')
@@ -66,7 +46,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
 
   playerRootNode.stopPlayback = function () {
     playerRootNode.playbackStatus = 'stopped'
-    _G.playbackLog.log('RD|Stop  all')
+    _G.playbackLog.log('Stop  all')
     Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
   }
 
@@ -87,22 +67,22 @@ module.exports.render = (_G, configuration, mainCallback) => {
     layoutNode.swConfiguration = configuration
     layoutNode.swSchedule = schedule
     layoutNode.timers = []
-    let later_sched = later.parse.cron(schedule.crontab)
-    _G.playbackLog.log('RD|' + layoutNode.swSchedule.name + ' initialized.')
+    let later_sched = later.parse.cron(layoutNode.swSchedule.crontab)
+    _G.playbackLog.log(layoutNode.swSchedule.name + ' initialized.', layoutNode.id)
 
     layoutNode.stopPlayback = function () { // this === layoutNode
       let self = this
       if (self.playbackStatus === 'stopped') {
-        _G.playbackLog.log('RD|Already stopped ' + self.swSchedule.name + ' schedule')
+        _G.playbackLog.log('Already stopped ' + self.swSchedule.name + ' schedule', self.id)
         return
       }
 
-      _G.playbackLog.log('RD|stopPlayback ' + self.swSchedule.name + ' schedule')
+      _G.playbackLog.log('stopPlayback ' + self.swSchedule.name + ' schedule')
       self.timers.forEach((timer) => {
         clearTimeout(timer)
       })
       self.playbackStatus = 'stopped'
-      _G.playbackLog.log('RD|Stop layout ' + self.swSchedule.name + ' playlists.')
+      _G.playbackLog.log('Stop layout ' + self.swSchedule.name + ' playlists.')
       Array.from(self.childNodes).forEach((a) => { a.stopPlayback() })
     }
 
@@ -110,14 +90,14 @@ module.exports.render = (_G, configuration, mainCallback) => {
       let self = this
       //
       // if (self.playbackStatus === 'stopped') {
-      //   _G.playbackLog.log('RD|Already stopped ' + self.swSchedule.name + ' schedule')
+      //   _G.playbackLog.log('Already stopped ' + self.swSchedule.name + ' schedule')
       //   return
       // }
-      _G.playbackLog.log('RD|startPlayback ' + self.swSchedule.name + ' schedule')
+      _G.playbackLog.log('start ' + self.swSchedule.name, self.id)
       if (self.swSchedule.cleanup) {
-        _G.playbackLog.log('RD|' + self.swSchedule.name + ' requesting cleanup')
+        _G.playbackLog.log(self.swSchedule.name + ' requesting cleanup', self.id)
         playerRootNode.stopPlayback()
-      } else if (layoutNode.playbackStatus === 'started') {
+      } else if (self.playbackStatus === 'started') {
         self.stopPlayback()
       }
 
@@ -126,39 +106,41 @@ module.exports.render = (_G, configuration, mainCallback) => {
 
       // dont restart layout if less than a second left to play
       if (ms_until_next_playback < 1000) {
-        _G.playbackLog.log('RD|Fix restart playback of schedule ' + self.swSchedule.name + ' in ' + ms_until_next_playback/1e3 + 's.')
+        _G.playbackLog.log('Fix restart playback of schedule ' + self.swSchedule.name + ' in ' + ms_until_next_playback/1e3 + 's.', self.id)
         ms_until_next_playback = new Date(later.schedule(later_sched).next(2)[1]) - new Date()
       }
 
       // Schedule next occurrance from crontab
-      _G.playbackLog.log('RD|Schedule playback of schedule ' + self.swSchedule.name + ' in ' + ms_until_next_playback/1e3 + 's.')
+      _G.playbackLog.log('Schedule playback of schedule ' + self.swSchedule.name + ' in ' + ms_until_next_playback/1e3 + 's.', self.id)
       setTimeout(() => {
         self.startPlayback()
       }, ms_until_next_playback)
 
       // Stop if duration already exceeded by now
-      if (schedule.duration && schedule.duration * 1e3 < ms_from_latest_playback) {
-        _G.playbackLog.log('RD|STOP    ' + self.swSchedule.name
-          + ' duration ' + self.swSchedule.duration
-          + ' sec_from_latest_playback ' + ms_from_latest_playback/1e3)
+      if (self.swSchedule.duration && self.swSchedule.duration * 1e3 < ms_from_latest_playback) {
+        _G.playbackLog.log('STOP    ' + self.swSchedule.name
+          + '; duration ' + self.swSchedule.duration
+          + '; sec_from_latest_playback ' + ms_from_latest_playback/1e3
+          , self.id
+        )
         self.stopPlayback()
         // Schedule might have duration less than interval between playback
       } else {
-        if (schedule.duration && schedule.duration * 1e3 < (ms_from_latest_playback + ms_until_next_playback)) {
-          let ms_left = schedule.duration * 1e3 - ms_from_latest_playback
+        if (self.swSchedule.duration && self.swSchedule.duration * 1e3 < (ms_from_latest_playback + ms_until_next_playback)) {
+          let ms_left = self.swSchedule.duration * 1e3 - ms_from_latest_playback
           ms_left = (ms_left < 10 ? 10 : ms_left)
           setTimeout(function () {
-            _G.playbackLog.log('RD|STOP    ' + schedule.name + ' from timeout.')
+            _G.playbackLog.log('STOP    ' + self.swSchedule.name + ' from timeout.', self.id)
             self.stopPlayback()
           }, ms_left)
         }
         self.playbackStatus = 'started'
-        _G.playbackLog.log('RD|' + self.swSchedule.name + ' layout status = "started".')
+        _G.playbackLog.log(self.swSchedule.name + ' layout status = "started".', self.id)
 
         // Start layout playlists (delayed a bit to avoid simultaneous pause/play)
-        layoutNode.timers.push(setTimeout(function () {
+        self.timers.push(setTimeout(function () {
           Array.from(self.childNodes).forEach((a) => {
-            _G.playbackLog.log('RD|START   ' + schedule.name + ' from timeout timer.')
+            _G.playbackLog.log('START   ' + self.swSchedule.name + ' from timeout timer.', self.id)
             a.startPlayback()
           })
         }, 10))
@@ -166,18 +148,19 @@ module.exports.render = (_G, configuration, mainCallback) => {
     }
 
     // Playlists
-    async.forEachOf(schedule.layoutPlaylists, (playlist, layoutPlaylistEid, callback) => {
+    async.forEachOf(layoutNode.swSchedule.layoutPlaylists, (playlist, layoutPlaylistEid, callback) => {
       playlist.playlistNode = document.createElement('div')
       let playlistNode = playlist.playlistNode
       // playlistNode.swPlaylist = playlist
       layoutNode.appendChild(playlistNode)
       playlistNode.id = playlistNode.parentNode.id + '.' + playlist.playlistEid
       playlistNode.className = 'playlist'
+      playlistNode.swPlaylist = playlist
       if (playlist.inPixels) {
-        playlistNode.style.top = (playlist.top / schedule.height * 100) + '%'
-        playlistNode.style.left = (playlist.left / schedule.width * 100) + '%'
-        playlistNode.style.width = (playlist.width / schedule.width * 100) + '%'
-        playlistNode.style.height = (playlist.height / schedule.height * 100) + '%'
+        playlistNode.style.top = (playlist.top / layoutNode.swSchedule.height * 100) + '%'
+        playlistNode.style.left = (playlist.left / layoutNode.swSchedule.width * 100) + '%'
+        playlistNode.style.width = (playlist.width / layoutNode.swSchedule.width * 100) + '%'
+        playlistNode.style.height = (playlist.height / layoutNode.swSchedule.height * 100) + '%'
       }
       else {
         playlistNode.style.top = playlist.top + '%'
@@ -186,26 +169,26 @@ module.exports.render = (_G, configuration, mainCallback) => {
         playlistNode.style.height = playlist.height + '%'
       }
 
-      playlistNode.stopPlayback = function () {
+      playlistNode.stopPlayback = function () { // this === playlistNode
         let self = this
         if (self.playbackStatus === 'stopped') {
-          _G.playbackLog.log('RD|Already stopped ' + self.name + ' layoutPlaylist')
+          _G.playbackLog.log('Already stopped ' + self.swPlaylist.name + ' layoutPlaylist', self.id)
           return
         }
-        playlistNode.playbackStatus = 'stopped'
-        _G.playbackLog.log('RD|Stop  playlist ' + self.id)
+        self.playbackStatus = 'stopped'
+        _G.playbackLog.log('Stop  playlist ' + self.swPlaylist.name, self.id)
         Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
       }
 
       playlistNode.startPlayback = function () { // this === playlistNode
         let self = this
         if (self.playbackStatus === 'started') {
-          _G.playbackLog.log('RD|Already started ' + self.name + ' layoutPlaylist')
+          _G.playbackLog.log('Already started ' + self.swPlaylist.name + ' layoutPlaylist', self.id)
           return
         }
-        playlistNode.playbackStatus = 'started'
-        _G.playbackLog.log('RD|Start playlist ' + playlistNode.id)
-        this.firstChild.startPlayback()
+        self.playbackStatus = 'started'
+        _G.playbackLog.log('Start playlist ' + self.swPlaylist.name, self.id)
+        self.firstChild.startPlayback()
       }
 
       // Medias
@@ -228,18 +211,18 @@ module.exports.render = (_G, configuration, mainCallback) => {
         mediaNode.style.visibility = 'hidden'
         mediaNode.className = 'media'
 
-        mediaNode.stopPlayback = function () {
+        mediaNode.stopPlayback = function () { // this === mediaNode
           let self = this
           if (self.playbackStatus === 'stopped') {
-            _G.playbackLog.log('RD|Already stopped ' + self.name + ' playlistMedias')
+            _G.playbackLog.log('Already stopped ' + self.swMedia.name + ' playlistMedias', self.id)
             return
           }
-          mediaNode.timers.forEach((timer) => {
+          self.timers.forEach((timer) => {
             clearTimeout(timer)
           })
-          mediaNode.playbackStatus = 'stopped'
-          _G.playbackLog.log('RD|Stop  media ' + mediaNode.id + ' ' + mediaNode.swMedia.name)
-          mediaNode.style.visibility = 'hidden'
+          self.playbackStatus = 'stopped'
+          _G.playbackLog.log('Stop  media ' + ' ' + self.swMedia.name, self.id)
+          self.style.visibility = 'hidden'
           this.firstChild.pause()
           this.firstChild.currentTime = 0
         }
@@ -247,48 +230,48 @@ module.exports.render = (_G, configuration, mainCallback) => {
         mediaNode.startPlayback = function () { // this === mediaNode
           let self = this
           if (self.playbackStatus === 'started') {
-            _G.playbackLog.log('RD|Already started ' + self.name + ' playlistMedias')
+            _G.playbackLog.log('Already started ' + self.name + ' playlistMedias', self.id)
             return
           }
-          if (mediaNode.playlistNode.playbackStatus !== 'started') {
-            _G.playbackLog.log('RD|Cant start ' + self.name + ' playlistMedias in stopped playlist')
+          if (self.playlistNode.playbackStatus !== 'started') {
+            _G.playbackLog.log('Cant start ' + self.name + ' playlistMedias in stopped playlist', self.id)
             return
           }
-          mediaNode.playbackStatus = 'started'
-          _G.playbackLog.log('RD|Start media ' + mediaNode.id + ' ' + mediaNode.swMedia.name)
-          mediaNode.style.visibility = 'visible'
+          self.playbackStatus = 'started'
+          _G.playbackLog.log('Start media ' + self.swMedia.name, self.id)
+          self.style.visibility = 'visible'
           this.firstChild.currentTime = 0
           try {
             this.firstChild.play()
           } catch (err) {
-            console.log(err)
-            _G.playbackLog.log('RD|media.play() errored for ' + mediaNode.id + '.', err)
+            _G.playbackLog.log('media.play() errored for ' + self.id + '.', self.id)
+            _G.playbackLog.log(err, self.id)
           }
             // .catch( function(reason) {
             //   console.log(reason)
-            //   _G.playbackLog.log('RD|media.play() errored for ' + mediaNode.id + '.', reason)
+            //   _G.playbackLog.log('media.play() errored for ' + self.id + '.', reason)
             // })
-          if (swMedia.duration) {
-            mediaNode.timers.push(setTimeout(function () {
-              _G.playbackLog.log('RD|mediaNode.stopPlayback() from "media duration exceeded" event.')
-              mediaNode.stopPlayback()
-              if (mediaNode.nextMediaNode) {
-                mediaNode.timers.push(setTimeout(function () {
-                  mediaNode.nextMediaNode.startPlayback()
-                }, swMedia.delay * 1e3))
+          if (self.swMedia.duration) {
+            let delayedStopPlayback = function() { // don't forget to bind "this"
+              _G.playbackLog.log('mediaNode.stopPlayback() from "media duration exceeded" event.', this.id)
+              this.stopPlayback()
+              if (this.nextMediaNode) {
+                _G.playbackLog.log('Load next media.', this.id)
+                this.timers.push(setTimeout(this.startPlayback.bind(this.nextMediaNode), this.swMedia.delay * 1e3))
               } else {
-                _G.playbackLog.log('RD|Playlist finished. No next media to load.')
+                _G.playbackLog.log('Playlist finished. No next media to load.', this.id)
               }
-            }, swMedia.duration * 1e3))
+            }
+            self.timers.push(setTimeout(delayedStopPlayback.bind(self), swMedia.duration * 1e3) )
           }
         }
         insertMedia(_G, mediaNode, swMedia, callback)
       }, function (err) {
         if (playlist.loop !== false) {
-          _G.playbackLog.log('RD|Set loop')
+          _G.playbackLog.log('Set loop', playlistNode.id)
           lastMediaNode.nextMediaNode = firstMediaNode
         } else {
-          _G.playbackLog.log('RD|Do not loop')
+          _G.playbackLog.log('Do not loop', playlistNode.id)
         }
         if (err) { console.error(err.message) }
         callback()
@@ -300,24 +283,24 @@ module.exports.render = (_G, configuration, mainCallback) => {
   }, function (err) {
     if (err) { console.error(err.message) }
     mainCallback(null, _G.codes.DOM_RENDERED)
-    _G.playbackLog.log('RD|' + _G.codes.DOM_RENDERED)
-    getOrderedSchedules(configuration.schedules)
+    _G.playbackLog.log(_G.codes.DOM_RENDERED)
+    getOrderedSchedules(_G, configuration.schedules)
       .forEach((a) => {
-        _G.playbackLog.log('RD|Start playback of ' + a.name)
+        _G.playbackLog.log('Start playback of ' + a.name, a.eid)
         a.layoutNode.startPlayback()
       })
   })
 }
 
 const insertMedia = (_G, mediaNode, swMedia, callback) => {
-  // _G.playbackLog.log('RD|Insert media ' + swMedia.mediaEid + '(' + mediaNode.id + ').', swMedia.type)
+  // _G.playbackLog.log('Insert media ' + swMedia.mediaEid + '(' + mediaNode.id + ').', swMedia.type)
   mediaNode.timers = []
   let mediaDomElement
   if (swMedia.type === _G.codes.MEDIA_TYPE_VIDEO) {
     mediaDomElement = document.createElement('VIDEO')
     let mimetype = 'video/' + swMedia.fileName.split('.')[swMedia.fileName.split('.').length - 1]
     mediaDomElement.type = mimetype
-    // _G.playbackLog.log('RD|' + mimetype)
+    // _G.playbackLog.log(mimetype)
     mediaDomElement.src = path.resolve(_G.MEDIA_DIR, swMedia.mediaEid.toString())
     mediaDomElement.overflow = 'hidden'
     mediaDomElement.autoplay = false
@@ -326,14 +309,14 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaNode.appendChild(mediaDomElement)
     mediaDomElement.id = mediaNode.id + '.video'
     mediaDomElement.addEventListener('durationchange', () => {
-      _G.playbackLog.log('RD|Video media ' + mediaNode.id + ' duration ' + mediaDomElement.duration + 'sec')
+      _G.playbackLog.log('Video media duration ' + mediaDomElement.duration + 'sec', mediaNode.id)
     })
     mediaDomElement.addEventListener('play', () => {
-      _G.playbackLog.log('RD|Video media ' + mediaNode.id + ' started')
+      _G.playbackLog.log('Video media started', mediaNode.id)
     })
     mediaDomElement.addEventListener('ended', () => {
-      _G.playbackLog.log('RD|Video media ' + mediaNode.id + ' ended. Start delay ' + swMedia.delay * 1e3 + 'ms')
-      // _G.playbackLog.log('RD|mediaNode.stopPlayback() from "video ended" event.')
+      _G.playbackLog.log('Video media ended. Start delay ' + swMedia.delay * 1e3 + 'ms', mediaNode.id)
+      // _G.playbackLog.log('mediaNode.stopPlayback() from "video ended" event.')
       mediaNode.stopPlayback()
       mediaNode.timers.push(setTimeout(function () {
         mediaNode.nextMediaNode.startPlayback()
@@ -347,7 +330,7 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaNode.appendChild(mediaDomElement)
     mediaDomElement.id = mediaNode.id + '.audio'
     mediaDomElement.addEventListener('ended', () => {
-      _G.playbackLog.log('RD|mediaNode.stopPlayback() from "audio ended" event.')
+      _G.playbackLog.log('mediaNode.stopPlayback() from "audio ended" event.', mediaNode.id)
       mediaNode.stopPlayback()
       mediaNode.timers.push(setTimeout(function () {
         mediaNode.nextMediaNode.startPlayback()
