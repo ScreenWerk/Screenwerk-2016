@@ -244,18 +244,18 @@ module.exports.render = (_G, configuration, mainCallback) => {
             //   console.log(reason)
             //   _G.playbackLog.log('media.play() errored for ' + self.id + '.', reason)
             // })
-          if (swMedia.duration) {
-            mediaNode.timers.push(setTimeout(function () {
-              _G.playbackLog.log('mediaNode.stopPlayback() from "media duration exceeded" event.')
-              mediaNode.stopPlayback()
-              if (mediaNode.nextMediaNode) {
-                mediaNode.timers.push(setTimeout(function () {
-                  mediaNode.nextMediaNode.startPlayback()
-                }, swMedia.delay * 1e3))
+          if (self.swMedia.duration) {
+            let delayedStopPlayback = function() { // don't forget to bind "this"
+              _G.playbackLog.log('mediaNode.stopPlayback() from "media duration exceeded" event.', this.id)
+              this.stopPlayback()
+              if (this.nextMediaNode) {
+                _G.playbackLog.log('Load next media.', this.id)
+                this.timers.push(setTimeout(this.startPlayback.bind(this.nextMediaNode), this.swMedia.delay * 1e3))
               } else {
-                _G.playbackLog.log('Playlist finished. No next media to load.')
+                _G.playbackLog.log('Playlist finished. No next media to load.', this.id)
               }
-            }, swMedia.duration * 1e3))
+            }
+            self.timers.push(setTimeout(delayedStopPlayback.bind(self), swMedia.duration * 1e3) )
           }
         }
         insertMedia(_G, mediaNode, swMedia, callback)
