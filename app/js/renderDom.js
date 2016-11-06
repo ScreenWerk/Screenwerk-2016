@@ -231,7 +231,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
             return
           }
           self.playbackStatus = 'started'
-          _G.playbackLog.log('Start media ' + self.id + ' ' + self.swMedia.name, self.id)
+          _G.playbackLog.log('Start media ' + self.swMedia.name, self.id)
           self.style.visibility = 'visible'
           this.firstChild.currentTime = 0
           try {
