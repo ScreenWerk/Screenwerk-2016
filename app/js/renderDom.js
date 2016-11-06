@@ -61,7 +61,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
     layoutNode.swConfiguration = configuration
     layoutNode.swSchedule = schedule
     layoutNode.timers = []
-    let later_sched = later.parse.cron(schedule.crontab)
+    let later_sched = later.parse.cron(layoutNode.swSchedule.crontab)
     _G.playbackLog.log(layoutNode.swSchedule.name + ' initialized.', layoutNode.id)
 
     layoutNode.stopPlayback = function () { // this === layoutNode
@@ -111,7 +111,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
       }, ms_until_next_playback)
 
       // Stop if duration already exceeded by now
-      if (schedule.duration && schedule.duration * 1e3 < ms_from_latest_playback) {
+      if (self.swSchedule.duration && self.swSchedule.duration * 1e3 < ms_from_latest_playback) {
         _G.playbackLog.log('STOP    ' + self.swSchedule.name
           + '; duration ' + self.swSchedule.duration
           + '; sec_from_latest_playback ' + ms_from_latest_playback/1e3
@@ -120,11 +120,11 @@ module.exports.render = (_G, configuration, mainCallback) => {
         self.stopPlayback()
         // Schedule might have duration less than interval between playback
       } else {
-        if (schedule.duration && schedule.duration * 1e3 < (ms_from_latest_playback + ms_until_next_playback)) {
-          let ms_left = schedule.duration * 1e3 - ms_from_latest_playback
+        if (self.swSchedule.duration && self.swSchedule.duration * 1e3 < (ms_from_latest_playback + ms_until_next_playback)) {
+          let ms_left = self.swSchedule.duration * 1e3 - ms_from_latest_playback
           ms_left = (ms_left < 10 ? 10 : ms_left)
           setTimeout(function () {
-            _G.playbackLog.log('STOP    ' + schedule.name + ' from timeout.', self.id)
+            _G.playbackLog.log('STOP    ' + self.swSchedule.name + ' from timeout.', self.id)
             self.stopPlayback()
           }, ms_left)
         }
@@ -134,7 +134,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
         // Start layout playlists (delayed a bit to avoid simultaneous pause/play)
         self.timers.push(setTimeout(function () {
           Array.from(self.childNodes).forEach((a) => {
-            _G.playbackLog.log('START   ' + schedule.name + ' from timeout timer.', self.id)
+            _G.playbackLog.log('START   ' + self.swSchedule.name + ' from timeout timer.', self.id)
             a.startPlayback()
           })
         }, 10))
@@ -142,18 +142,19 @@ module.exports.render = (_G, configuration, mainCallback) => {
     }
 
     // Playlists
-    async.forEachOf(schedule.layoutPlaylists, (playlist, layoutPlaylistEid, callback) => {
+    async.forEachOf(layoutNode.swSchedule.layoutPlaylists, (playlist, layoutPlaylistEid, callback) => {
       playlist.playlistNode = document.createElement('div')
       let playlistNode = playlist.playlistNode
       // playlistNode.swPlaylist = playlist
       layoutNode.appendChild(playlistNode)
       playlistNode.id = playlistNode.parentNode.id + '.' + playlist.playlistEid
       playlistNode.className = 'playlist'
+      playlistNode.swPlaylist = playlist
       if (playlist.inPixels) {
-        playlistNode.style.top = (playlist.top / schedule.height * 100) + '%'
-        playlistNode.style.left = (playlist.left / schedule.width * 100) + '%'
-        playlistNode.style.width = (playlist.width / schedule.width * 100) + '%'
-        playlistNode.style.height = (playlist.height / schedule.height * 100) + '%'
+        playlistNode.style.top = (playlist.top / layoutNode.swSchedule.height * 100) + '%'
+        playlistNode.style.left = (playlist.left / layoutNode.swSchedule.width * 100) + '%'
+        playlistNode.style.width = (playlist.width / layoutNode.swSchedule.width * 100) + '%'
+        playlistNode.style.height = (playlist.height / layoutNode.swSchedule.height * 100) + '%'
       }
       else {
         playlistNode.style.top = playlist.top + '%'
@@ -162,25 +163,25 @@ module.exports.render = (_G, configuration, mainCallback) => {
         playlistNode.style.height = playlist.height + '%'
       }
 
-      playlistNode.stopPlayback = function () {
+      playlistNode.stopPlayback = function () { // this === playlistNode
         let self = this
         if (self.playbackStatus === 'stopped') {
-          _G.playbackLog.log('Already stopped ' + self.name + ' layoutPlaylist', self.id)
+          _G.playbackLog.log('Already stopped ' + self.swPlaylist.name + ' layoutPlaylist', self.id)
           return
         }
         self.playbackStatus = 'stopped'
-        _G.playbackLog.log('Stop  playlist ' + self.name, self.id)
+        _G.playbackLog.log('Stop  playlist ' + self.swPlaylist.name, self.id)
         Array.from(this.childNodes).forEach((a) => { a.stopPlayback() })
       }
 
       playlistNode.startPlayback = function () { // this === playlistNode
         let self = this
         if (self.playbackStatus === 'started') {
-          _G.playbackLog.log('Already started ' + self.name + ' layoutPlaylist', self.id)
+          _G.playbackLog.log('Already started ' + self.swPlaylist.name + ' layoutPlaylist', self.id)
           return
         }
         self.playbackStatus = 'started'
-        _G.playbackLog.log('Start playlist ' + self.name, self.id)
+        _G.playbackLog.log('Start playlist ' + self.swPlaylist.name, self.id)
         self.firstChild.startPlayback()
       }
 
