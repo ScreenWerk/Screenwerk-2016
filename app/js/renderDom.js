@@ -32,6 +32,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
   }
   while (document.getElementById('player').hasChildNodes()) {
     if (typeof document.getElementById('player').lastChild.stopPlayback === 'function') {
+      _G.playbackLog.log('stopPlayback before removeChild', document.getElementById('player').lastChild.id)
       document.getElementById('player').lastChild.stopPlayback()
     } else {
       _G.playbackLog.log('No stopPlayback function', document.getElementById('player').lastChild.id)
