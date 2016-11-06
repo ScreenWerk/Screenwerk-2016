@@ -50,6 +50,7 @@ function createWindow () {
   try {
     let data = fs.readFileSync(confFilePath, 'utf8')
     let conf = YAML.parse(data)
+    var geometry = conf.GEOMETRY || { x: display.bounds.x, y: display.bounds.y, width: 900, height: 600 }
     displayNum = conf.DISPLAY_NUM || displayNum
     skipTaskbar = conf.SKIP_TASKBAR || skipTaskbar
     devMode = conf.DEV_MODE || devMode
@@ -69,7 +70,6 @@ function createWindow () {
   displayNum --
   let display = displays[displayNum]
 
-  let geometry = conf.GEOMETRY || { x: display.bounds.x, y: display.bounds.y, width: 900, height: 600 }
   mainWindow = new BrowserWindow(geometry)
   mainWindow.setMenu(null)
   if (devMode) {
