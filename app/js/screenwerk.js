@@ -38,9 +38,11 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
     if (code === _G.codes.CONFIGURATION_FILE_OK) {
       playConfiguration(_G, jsonData)
       pollUpdates(_G)
-      return console.info(code)
+      _G.playbackLog.log(code)
+      return
     }
-    return console.info(code)
+    _G.playbackLog.log(code)
+    return
   })
 
 

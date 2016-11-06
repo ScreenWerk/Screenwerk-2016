@@ -31,6 +31,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
     document.body.style.cursor = 'crosshair'
   }
   while (document.getElementById('player').hasChildNodes()) {
+    document.getElementById('player').lastChild.stopPlayback()
     document.getElementById('player').removeChild(document.getElementById('player').lastChild)
   }
   let playerRootNode = document.createElement('div')
