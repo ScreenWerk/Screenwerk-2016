@@ -76,14 +76,25 @@ module.exports = (callback) => {
 
   _G.playbackLog = fs.createWriteStream(path.resolve(_G.HOME_PATH, 'playback.log'))
   _G.playbackLog.setDefaultEncoding('utf8')
-  _G.playbackLog.log = function(text) {
+  _G.playbackLog.log = function(text, id) {
     let when = new Date().toJSON().slice(11).replace(/[TZ]/g, ' ')
     let stack = __stack[1].toString()
-    let where = ((stack.split('/').pop().split(':')[0]).split('.')[0] + ':' + stack.split('/').pop().split(':')[1] + '               ').slice(0,15)
+    let method = stack.split(' ')[0].split('.').pop()
+    let where = (
+      (
+        (stack.split('/').pop().split(':')[0])
+        .split('.')[0]
+        + ':' + stack.split('/').pop().split(':')[1]
+        + new Array(15).join(' ')
+      ).slice(0,15)
+      + ' ' + method
+      + new Array(35).join(' ')
+    ).slice(0,35)
+
     if (typeof text === 'object') {
       text = util.inspect(text)
     }
-    _G.playbackLog.write(when + ' ' + where + ' ' + text + '\n')
+    _G.playbackLog.write(when + where + (id ? ' [' + id + ']' : '') + ' ' + text + '\n')
   }
 
   _G.playbackLog.log(_G.packageJson.productName + ' version ' + _G.packageJson.version)
