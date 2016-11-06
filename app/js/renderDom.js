@@ -302,13 +302,13 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaNode.appendChild(mediaDomElement)
     mediaDomElement.id = mediaNode.id + '.video'
     mediaDomElement.addEventListener('durationchange', () => {
-      _G.playbackLog.log('Video media ' + mediaNode.id + ' duration ' + mediaDomElement.duration + 'sec')
+      _G.playbackLog.log('Video media duration ' + mediaDomElement.duration + 'sec', mediaNode.id)
     })
     mediaDomElement.addEventListener('play', () => {
-      _G.playbackLog.log('Video media ' + mediaNode.id + ' started')
+      _G.playbackLog.log('Video media started', mediaNode.id)
     })
     mediaDomElement.addEventListener('ended', () => {
-      _G.playbackLog.log('Video media ' + mediaNode.id + ' ended. Start delay ' + swMedia.delay * 1e3 + 'ms')
+      _G.playbackLog.log('Video media ended. Start delay ' + swMedia.delay * 1e3 + 'ms', mediaNode.id)
       // _G.playbackLog.log('mediaNode.stopPlayback() from "video ended" event.')
       mediaNode.stopPlayback()
       mediaNode.timers.push(setTimeout(function () {
@@ -323,7 +323,7 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaNode.appendChild(mediaDomElement)
     mediaDomElement.id = mediaNode.id + '.audio'
     mediaDomElement.addEventListener('ended', () => {
-      _G.playbackLog.log('mediaNode.stopPlayback() from "audio ended" event.')
+      _G.playbackLog.log('mediaNode.stopPlayback() from "audio ended" event.', mediaNode.id)
       mediaNode.stopPlayback()
       mediaNode.timers.push(setTimeout(function () {
         mediaNode.nextMediaNode.startPlayback()
