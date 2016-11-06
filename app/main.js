@@ -72,7 +72,7 @@ function createWindow () {
   mainWindow = new BrowserWindow({ x: display.bounds.x, y: display.bounds.y, width: 900, height: 600 })
   mainWindow.setMenu(null)
   if (devMode) {
-    mainWindow.setFullScreen(true)
+    mainWindow.setFullScreen(false)
     mainWindow.webContents.openDevTools()
     process.env.DEBUG = '*'
   } else {
