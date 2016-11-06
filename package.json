@@ -1,7 +1,7 @@
 {
   "name": "Screenwerk2016",
   "productName": "Screenwerk 2016",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Screenwerk2016",
   "main": "main.js",
   "scripts": {
