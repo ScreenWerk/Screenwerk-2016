@@ -4,6 +4,7 @@ const request = require('request')
 const fs = require('fs')
 
 module.exports.fetchConfiguration = (_G, callback) => {
+  _G.playbackLog.log('SYN|= = = ENTER fetchConfiguration')
   if (document.getElementById('downloads') === null) {
     let downloadDiv = document.createElement('div')
     downloadDiv.id = 'downloads'
@@ -14,74 +15,92 @@ module.exports.fetchConfiguration = (_G, callback) => {
 
   fs.readFile(_G.confFilePath, (err, configuration) => {
     if (err) {
-      console.log(err)
+      _G.playbackLog.log('SYN|readFile errored')
     }
     else {
       _G.configurationTs = (new Date(JSON.parse(configuration).publishedAt)).getTime()
-      // console.log(_G.configurationTs)
+      // _G.playbackLog.log(_G.configurationTs)
     }
 
     let data = ''
-    console.log('Requesting ' + _G.SCREENWERK_API + _G.SCREEN_EID)
+    _G.playbackLog.log('SYN|Requesting ' + _G.SCREENWERK_API + _G.SCREEN_EID)
+    let request_ended = false
     request(_G.SCREENWERK_API + _G.SCREEN_EID)
     .on('response', (res) => {
       if (res.statusCode !== 200) {
-        console.error('statusCode: ', res.statusCode, 'headers: ', res.headers)
+        _G.playbackLog.log('SYN|statusCode: ' + res.statusCode)
+        // _G.playbackLog.log(res.headers)
+        _G.playbackLog.log('SYN| = CALLBACK from response !200')
+        return callback(res)
       }
       else {
-        // console.info('statusCode: ', res.statusCode, 'headers: ', res.headers)
+        _G.playbackLog.log('SYN|statusCode: ' + res.statusCode)
+        // _G.playbackLog.log(res.headers)
       }
     })
     .on('error', (err) => {
-      console.error('ERROR:', err)
-      callback(err)
+      _G.playbackLog.log('SYN| = CALLBACK from error')
+      return callback(err)
     })
     .on('data', (d) => {
       data = data + d
     })
     .on('end', () => {
+      // // could it be that end event is fired twice?!
+      // if (request_ended) { return }
+      // request_ended = true
+
       let configuration = JSON.parse(data)
       if (configuration.error) {
         // window.alert(data)
         fs.unlink(_G.tempConfFilePath, () => {
           if (configuration.error.code === 401) {
             // console.info('INFO:', data)
-            callback(configuration.error, _G.codes.CONFIGURATION_NOT_AVAILABLE_YET)
+            _G.playbackLog.log('SYN| = CALLBACK from end conf error 401')
+            return callback(configuration.error, _G.codes.CONFIGURATION_NOT_AVAILABLE_YET)
           }
           else {
-            console.error('ERROR:', data)
-            callback(configuration.error, _G.codes.CONFIGURATION_FETCH_FAILED)
+            // console.error('ERROR:', data)
+            _G.playbackLog.log('SYN| = CALLBACK from end conf error')
+            return callback(configuration.error, _G.codes.CONFIGURATION_FETCH_FAILED)
           }
         })
-        return
+        // return
       }
       // console.info('INFO:', data)
       let configurationTs = new Date(configuration.publishedAt).getTime()
       if (configurationTs === _G.configurationTs) {
         fs.unlink(_G.tempConfFilePath, () => {
-          // console.log(_G.codes.CONFIGURATION_NOT_UPDATED)
-          callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
+          // _G.playbackLog.log(_G.codes.CONFIGURATION_NOT_UPDATED)
+          _G.playbackLog.log('SYN| = CALLBACK from CONFIGURATION_NOT_UPDATED')
+          return callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })
       } else {
-        console.log('got updates')
-        console.log('_G.configurationTs <- configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs)
+        _G.playbackLog.log('SYN|got updates')
+        _G.playbackLog.log('SYN|_G.configurationTs <- configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs)
         _G.configurationTs = configurationTs
         loadMedias(_G, configuration, () => {
           fs.writeFileSync(_G.confFilePath, JSON.stringify(configuration, null, 2))
           fs.unlink(_G.tempConfFilePath, () => {
             async.whilst(
               () => { return document.getElementById('downloads').hasChildNodes() },
-              (callback) => {
+              (whilst_callback) => {
                 setTimeout(function () {
                   if (document.getElementById('downloads').childNodes.length) {
                     document.getElementById('downloads').removeChild(document.getElementById('downloads').lastChild)
                   }
-                  callback(null)
+                  whilst_callback(null)
                 }, 100)
               },
               (err) => {
-                if (err) console.log(err)
-                callback(null, _G.codes.CONFIGURATION_UPDATED)
+                if (err) {
+                  _G.playbackLog.log('SYN|removing progressbars errored somehow')
+                  // TODO: QUESTION: WTF:
+                  // Why are we not calling back here?
+                  return
+                }
+                _G.playbackLog.log('SYN| = CALLBACK from async unlink')
+                return callback(null, _G.codes.CONFIGURATION_UPDATED)
               }
             )
           })
@@ -115,14 +134,14 @@ const loadMedias = (_G, configuration, callback) => {
           if (err) {
             request(task.url)
               .on('response', (res) => {
-                console.log(res.headers)
+                // _G.playbackLog.log(res.headers)
                 fileSize = res.headers['content-length']
                 var textNode = document.createTextNode('; ' + bytesToSize(fileSize) + ' to download.')
                 document.getElementById(task.eid).appendChild(textNode)
                 document.getElementById(task.eid).appendChild(progressBar)
               })
               .on('error', (err) => {
-                console.log(err)
+                _G.playbackLog.log('request errored with ' + task.url)
                 taskCallback(err)
               })
               .on('data', (d) => {
@@ -158,7 +177,8 @@ const loadMedias = (_G, configuration, callback) => {
     document.getElementById('downloads').appendChild(document.createElement('hr'))
     document.getElementById('downloads').appendChild(document.createTextNode('all items have been processed'))
     document.getElementById('downloads').appendChild(document.createElement('hr'))
-    callback(null)
+    _G.playbackLog.log('SYN| = medias drained')
+    // callback(null)
   }
 
   async.each(configuration.schedules, (schedule, callback) => {
