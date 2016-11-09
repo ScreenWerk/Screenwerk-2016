@@ -263,7 +263,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
                 _G.playbackLog.log('Playlist finished. No next media to load.', this.id)
               }
             }
-            self.timers.push(setTimeout(delayedStopPlayback.bind(self), swMedia.duration * 1e3) )
+            self.timers.push(setTimeout(delayedStopPlayback.bind(self), self.swMedia.duration * 1e3) )
           }
         }
         insertMedia(_G, mediaNode, swMedia, callback)
