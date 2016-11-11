@@ -184,6 +184,9 @@ const loadMedias = (_G, configuration, callback) => {
   async.each(configuration.schedules, (schedule, callback) => {
     async.each(schedule.layoutPlaylists, (layoutPlaylist, callback) => {
       async.each(layoutPlaylist.playlistMedias, (playlistMedia, callback) => {
+        if (playlistMedia.type === 'URL') {
+          return callback()
+        }
         let downloadElement = document.createElement('div')
         downloadElement.appendChild(
           document.createElement('strong').appendChild(
