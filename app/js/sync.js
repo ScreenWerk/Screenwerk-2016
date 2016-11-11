@@ -155,6 +155,7 @@ const loadMedias = (_G, configuration, loadMediasCB) => {
                 progressBar.style['background-color'] = color
                 progressBar.style.height = '2px'
                 if (color === 'green') {
+                  progressBar.style.width = '100%'
                   fs.rename(task.tempFilePath, task.filePath, () => {
                     taskCallback(null)
                   })
