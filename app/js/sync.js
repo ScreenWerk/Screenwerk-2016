@@ -2,6 +2,7 @@ const async = require('async')
 const path = require('path')
 const request = require('request')
 const fs = require('fs')
+const util = require('util')
 
 module.exports.fetchConfiguration = (_G, callback) => {
   _G.playbackLog.log('= = = ENTER fetchConfiguration')
@@ -24,7 +25,6 @@ module.exports.fetchConfiguration = (_G, callback) => {
 
     let data = ''
     _G.playbackLog.log('Requesting ' + _G.SCREENWERK_API + _G.SCREEN_EID)
-    let request_ended = false
     request(_G.SCREENWERK_API + _G.SCREEN_EID)
     .on('response', (res) => {
       if (res.statusCode !== 200) {
@@ -46,10 +46,6 @@ module.exports.fetchConfiguration = (_G, callback) => {
       data = data + d
     })
     .on('end', () => {
-      // // could it be that end event is fired twice?!
-      // if (request_ended) { return }
-      // request_ended = true
-
       let configuration = JSON.parse(data)
       if (configuration.error) {
         // window.alert(data)
@@ -111,7 +107,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
   })
 }
 
-const loadMedias = (_G, configuration, callback) => {
+const loadMedias = (_G, configuration, loadMediasCB) => {
   var bytesToSize = (bytes) => {
     var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
     if (bytes === 0) return '0'
@@ -127,40 +123,50 @@ const loadMedias = (_G, configuration, callback) => {
     var progressBar = document.getElementById(task.eid + '_progress')
     progressBar.style.width = '0%'
     progressBar.style['background-color'] = 'lightgray'
-    progressBar.style.height = '5px'
+    progressBar.style.height = '2px'
     fs.access(task.tempFilePath, fs.F_OK, (err) => {
       if (err) {
         fs.access(task.filePath, fs.F_OK, (err) => {
           if (err) {
             request(task.url)
               .on('response', (res) => {
-                // _G.playbackLog.log(res.headers)
-                fileSize = res.headers['content-length']
+                // _G.playbackLog.log('response', task.eid)
+                fileSize = Number(res.headers['content-length'])
                 var textNode = document.createTextNode('; ' + bytesToSize(fileSize) + ' to download.')
                 document.getElementById(task.eid).appendChild(textNode)
                 document.getElementById(task.eid).appendChild(progressBar)
               })
               .on('error', (err) => {
-                _G.playbackLog.log('request errored with ' + task.url)
-                taskCallback(err)
+                // _G.playbackLog.log(err.code, task.eid)
+                progressBar.style.height = '2px'
               })
               .on('data', (d) => {
                 downloadedSize = downloadedSize + d.length
                 progressBar.style.width = (downloadedSize / fileSize * 100) + '%'
+                // if (new Date().getTime()%5500 === 42) { request.emit('error', 'test') }
               })
               .on('end', () => {
-                progressBar.style['background-color'] = 'green'
+                let color = (String(downloadedSize) === String(fileSize) ? 'green' : 'red')
+                // _G.playbackLog.log('end with ' + color, task.eid)
+                progressBar.style['background-color'] = color
                 progressBar.style.height = '2px'
-                fs.rename(task.tempFilePath, task.filePath, () => {
-                  taskCallback(null)
-                })
+                if (color === 'green') {
+                  fs.rename(task.tempFilePath, task.filePath, () => {
+                    taskCallback(null)
+                  })
+                } else {
+                  fs.unlink(task.tempFilePath, () => {
+                    _G.playbackLog.log(util.inspect(downloadedSize) + ' !== ' + util.inspect(fileSize), task.eid)
+                    taskCallback('download failed', task.eid)
+                  })
+                }
               })
               .pipe(fs.createWriteStream(task.tempFilePath))
 
             return
           }
           progressBar.style['background-color'] = 'green'
-          progressBar.style.height = '20px'
+          // progressBar.style.height = '20px'
           progressBar.style.width = '100%'
           document.getElementById(task.eid).appendChild(document.createTextNode('; file exists: ' + task.filePath))
           taskCallback(null)
@@ -178,7 +184,7 @@ const loadMedias = (_G, configuration, callback) => {
     document.getElementById('downloads').appendChild(document.createTextNode('all items have been processed'))
     document.getElementById('downloads').appendChild(document.createElement('hr'))
     _G.playbackLog.log(' = medias drained')
-    // callback(null)
+    // loadMediasCB(null)
   }
 
   async.each(configuration.schedules, (schedule, callback) => {
@@ -194,6 +200,7 @@ const loadMedias = (_G, configuration, callback) => {
           )
         )
         downloadElement.id = playlistMedia.mediaEid
+        downloadElement.style = 'font-size: 5px;'
         document.getElementById('downloads').appendChild(
           downloadElement
         )
@@ -206,7 +213,7 @@ const loadMedias = (_G, configuration, callback) => {
         progressBar.id = playlistMedia.mediaEid + '_progress'
         progressBar.style.width = '0%'
         progressBar.style['background-color'] = 'lightgray'
-        progressBar.style.height = '5px'
+        progressBar.style.height = '2px'
 
         let tempFilePath = path.resolve(_G.MEDIA_DIR, playlistMedia.mediaEid.toString() + '.download')
         let filePath = path.resolve(_G.MEDIA_DIR, playlistMedia.mediaEid.toString())
@@ -214,16 +221,25 @@ const loadMedias = (_G, configuration, callback) => {
           if (err) { // Media file not downloading right now.
             fs.access(filePath, fs.F_OK, (err) => {
               if (err) { // Media file not present yet.
-                mediasToLoad.push(
-                  { eid: playlistMedia.mediaEid, tempFilePath: tempFilePath, filePath: filePath, url: playlistMedia.file },
-                  (err) => {
-                    if (err) {
-                      console.error(err)
-                      textElement.appendChild(document.createTextNode(err))
+                let task = { eid: playlistMedia.mediaEid, tempFilePath: tempFilePath, filePath: filePath, url: playlistMedia.file }
+                task.retry = 0
+                let enqueueMedia = function(task, callback) {
+                  if (task.retry === 0) { _G.playbackLog.log('start task', task.eid) }
+                  else { _G.playbackLog.log('retry task ' + task.retry, task.eid) }
+                  mediasToLoad.push(
+                    task,
+                    (err) => {
+                      if (err) {
+                        task.retry ++
+                        _G.playbackLog.log(err, task.eid)
+                        // fs.unlinkSync(task.tempFilePath)
+                        enqueueMedia(task, callback)
+                      }
+                      else { callback() }
                     }
-                    callback()
-                  }
-                )
+                  )
+                }
+                enqueueMedia(task, callback)
               } else { // Media file already present.
                 textElement.appendChild(document.createTextNode('; file exists: ' + filePath))
                 progressBar.style['background-color'] = 'green'
@@ -247,6 +263,6 @@ const loadMedias = (_G, configuration, callback) => {
     })
   }, function (err) {
     if (err) { console.error(err.message) }
-    callback()
+    loadMediasCB()
   })
 }
