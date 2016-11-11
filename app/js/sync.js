@@ -118,9 +118,10 @@ const loadMedias = (_G, configuration, loadMediasCB) => {
 
   const queueConcurrency = 4
   var mediasToLoad = async.queue((task, taskCallback) => {
-    var fileSize = 0
-    var downloadedSize = 0
-    var progressBar = document.getElementById(task.eid + '_progress')
+    let fileSize = 0
+    let downloadedSize = 0
+    let progressBar = document.getElementById(task.eid + '_progress')
+    let chunkCount = 0
     progressBar.style.width = '0%'
     progressBar.style['background-color'] = 'lightgray'
     progressBar.style.height = '2px'
@@ -141,8 +142,11 @@ const loadMedias = (_G, configuration, loadMediasCB) => {
                 progressBar.style.height = '2px'
               })
               .on('data', (d) => {
+                chunkCount ++
                 downloadedSize = downloadedSize + d.length
-                progressBar.style.width = (downloadedSize / fileSize * 100) + '%'
+                if (chunkCount%20 === 1) {
+                  progressBar.style.width = (downloadedSize / fileSize * 100) + '%'
+                }
                 // if (new Date().getTime()%5500 === 42) { request.emit('error', 'test') }
               })
               .on('end', () => {
