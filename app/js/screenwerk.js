@@ -35,13 +35,12 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
   }
 
   readConfiguration(_G, (code, jsonData) => {
+    _G.playbackLog.log(code)
     if (code === _G.codes.CONFIGURATION_FILE_OK) {
       playConfiguration(_G, jsonData)
       pollUpdates(_G)
-      _G.playbackLog.log(code)
       return
     }
-    _G.playbackLog.log(code)
     return
   })
 
