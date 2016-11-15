@@ -73,7 +73,8 @@ module.exports.fetchConfiguration = (_G, callback) => {
         })
       } else {
         _G.playbackLog.log('got updates')
-        _G.playbackLog.log('_G.configurationTs <- configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs)
+        if (_G.configurationTs ) { _G.playbackLog.log('Set _G.configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs) } 
+        else { _G.playbackLog.log('Set _G.configurationTs: ' + configurationTs) }
         _G.configurationTs = configurationTs
         loadMedias(_G, configuration, () => {
           fs.writeFileSync(_G.confFilePath, JSON.stringify(configuration, null, 2))
