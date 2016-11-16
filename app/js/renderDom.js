@@ -365,7 +365,10 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.id = mediaNode.id + '.url'
     // Properties and methods not present natively
     // mediaDomElement.currentTime = 0
-    mediaDomElement.play = () => {}
+    mediaDomElement.play = function() {
+      console.log('reloading ', mediaDomElement)
+      mediaDomElement.contentWindow.location.reload()
+    }
     mediaDomElement.pause = () => {}
     return callback()
   }
