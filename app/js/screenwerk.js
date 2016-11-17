@@ -3,6 +3,7 @@
 // All of the Node.js APIs are available in this process.
 const path = require('path')
 const fs = require('fs')
+const util = require('util')
 
 console.log('Starting screenwerk.js')
 require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Paths, screenEid, etc.
@@ -15,10 +16,10 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
     fs.readFile(_G.confFilePath, (err, configuration) => {
       if (!err) { // Metafile is present, media should be up to date
         try {
-          let configuration = JSON.parse(configuration)
-          return callback(_G.codes.CONFIGURATION_FILE_OK, JSON.parse(configuration))
+          let _configuration = JSON.parse(configuration)
+          return callback(_G.codes.CONFIGURATION_FILE_OK, _configuration)
         } catch (e) {
-          _G.playbackLog.log('Can\'t parse ' + _G.confFilePath + '. Fetch a fresh one.')
+          _G.playbackLog.log(e)
           fs.unlinkSync(_G.confFilePath)
         }
       }
