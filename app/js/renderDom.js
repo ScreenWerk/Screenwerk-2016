@@ -1,5 +1,6 @@
 const async = require('async')
 const fs = require('fs')
+const util = require('util')
 const later = require('later')
 const path = require('path')
 
@@ -24,6 +25,12 @@ const getOrderedSchedules = (_G, schedules) => {
     })
 }
 
+const isValid = (obj) => {
+  let now = new Date().getTime()
+  let fro = obj.validFrom ? new Date(obj.validFrom).getTime() : now - 1
+  let til = obj.validTo ? new Date(obj.validTo) : now + 1
+  return (now > fro && now < til)
+}
 
 module.exports.render = (_G, configuration, mainCallback) => {
   document.body.style.cursor = 'none'
@@ -88,11 +95,6 @@ module.exports.render = (_G, configuration, mainCallback) => {
 
     layoutNode.startPlayback = function () { // this === layoutNode
       let self = this
-      //
-      // if (self.playbackStatus === 'stopped') {
-      //   _G.playbackLog.log('Already stopped ' + self.swSchedule.name + ' schedule')
-      //   return
-      // }
       _G.playbackLog.log('start ' + self.swSchedule.name, self.id)
       if (self.swSchedule.cleanup) {
         _G.playbackLog.log(self.swSchedule.name + ' requesting cleanup', self.id)
@@ -244,6 +246,17 @@ module.exports.render = (_G, configuration, mainCallback) => {
             _G.playbackLog.log('Cant start ' + self.name + ' playlistMedias in stopped playlist', self.id)
             return
           }
+
+          if (!isValid(self.swMedia)) {
+            _G.playbackLog.log('Media not valid currently: ' + self.swMedia.validFrom + '<' + new Date() + '<' + self.swMedia.validTo, self.swMedia.playlistMediaEid)
+            if (self.nextMediaNode) {
+              self.nextMediaNode.startPlayback()
+              return
+            } else {
+              _G.playbackLog.log('Playlist finished. No next media to load.', self.id)
+            }
+          }
+
           self.playbackStatus = 'started'
           _G.playbackLog.log('Start media ' + self.swMedia.name, self.id)
           self.style.visibility = 'visible'
