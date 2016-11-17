@@ -185,7 +185,7 @@ module.exports = (callback) => {
   // _G.SCREEN_KEY = credentials.SCREEN_KEY
   // _G.DISPLAY_NUM = credentials.DISPLAY_NUM
   // _G.DEV_MODE = credentials.DEV_MODE
-  _G.SCREENWERK_API = 'https://swpublisher.entu.eu/configuration/'
+  _G.SCREENWERK_API = 'https://swpublisher.entu.eu/screen/'
 
   _G.setScreenEid = (_G, eid) => {
     let credentials = readCredentials(_G)

@@ -70,7 +70,7 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
       // console.log('poll finished')
       setTimeout(function () {
         pollUpdates(_G)
-      }, 10e3)
+      }, 30e3)
     })
   }
 })
