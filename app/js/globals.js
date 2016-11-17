@@ -25,7 +25,8 @@ module.exports = (callback) => {
   let _G = {} // Globals. Paths, screenEid, etc.
 
   _G.packageJson = require(path.resolve(__dirname, '..', '..', 'package.json'))
-  _G.gitBranch = fs.readFileSync(path.resolve(__dirname, '..', '..', '.git', 'HEAD'), 'utf8')
+  let gitbranch = fs.readFileSync(path.resolve(__dirname, '..', '..', '.git', 'HEAD'), 'utf8').split(': ')[1].split('/')
+  _G.gitBranch = String(gitbranch[gitbranch.length - 1])
 
   _G.codes = {
     CONFIGURATION_DOWNLOAD_IN_PROGRESS: 'CONFIGURATION_DOWNLOAD_IN_PROGRESS',

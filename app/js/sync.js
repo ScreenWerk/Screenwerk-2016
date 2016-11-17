@@ -21,8 +21,9 @@ module.exports.fetchConfiguration = (_G, callback) => {
 
     let conf_url = _G.SCREENWERK_API + _G.SCREEN_EID + '.json'
     _G.playbackLog.log('Requesting ' + conf_url)
+    console.log(_G.packageJson.productName + ' version ' + _G.packageJson.version + '@dev')
     let options = {
-      headers: { 'User-Agent': _G.packageJson.productName + ' version ' + _G.packageJson.version + '@' + _G.gitBranch.split(': ')[1] },
+      headers: { 'User-Agent': _G.packageJson.productName + ' version ' + _G.packageJson.version + '@dev' },
       uri: conf_url
     }
     request(options, function(error, response, data) {
