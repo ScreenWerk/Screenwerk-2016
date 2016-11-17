@@ -148,25 +148,28 @@ module.exports.render = (_G, configuration, mainCallback) => {
     }
 
     // Playlists
-    async.forEachOf(layoutNode.swSchedule.layoutPlaylists, (playlist, layoutPlaylistEid, callback) => {
-      playlist.playlistNode = document.createElement('div')
-      let playlistNode = playlist.playlistNode
-      // playlistNode.swPlaylist = playlist
+    async.forEachOf(layoutNode.swSchedule.layoutPlaylists, (swPlaylist, layoutPlaylistEid, callback) => {
+      swPlaylist.playlistNode = document.createElement('div')
+      let playlistNode = swPlaylist.playlistNode
       layoutNode.appendChild(playlistNode)
-      playlistNode.id = playlistNode.parentNode.id + '.' + playlist.playlistEid
+      playlistNode.id = playlistNode.parentNode.id + '.' + swPlaylist.playlistEid
       playlistNode.className = 'playlist'
-      playlistNode.swPlaylist = playlist
-      if (playlist.inPixels) {
-        playlistNode.style.top = (playlist.top / layoutNode.swSchedule.height * 100) + '%'
-        playlistNode.style.left = (playlist.left / layoutNode.swSchedule.width * 100) + '%'
-        playlistNode.style.width = (playlist.width / layoutNode.swSchedule.width * 100) + '%'
-        playlistNode.style.height = (playlist.height / layoutNode.swSchedule.height * 100) + '%'
+      playlistNode.swPlaylist = swPlaylist
+      if (swPlaylist.inPixels) {
+        playlistNode.style.top = (swPlaylist.top / layoutNode.swSchedule.height * 100) + '%'
+        playlistNode.style.left = (swPlaylist.left / layoutNode.swSchedule.width * 100) + '%'
+        playlistNode.style.width = (swPlaylist.width / layoutNode.swSchedule.width * 100) + '%'
+        playlistNode.style.height = (swPlaylist.height / layoutNode.swSchedule.height * 100) + '%'
       }
       else {
-        playlistNode.style.top = playlist.top + '%'
-        playlistNode.style.left = playlist.left + '%'
-        playlistNode.style.width = playlist.width + '%'
-        playlistNode.style.height = playlist.height + '%'
+        playlistNode.style.top = swPlaylist.top + '%'
+        playlistNode.style.left = swPlaylist.left + '%'
+        playlistNode.style.width = swPlaylist.width + '%'
+        playlistNode.style.height = swPlaylist.height + '%'
+      }
+
+      if (swPlaylist.validFrom || swPlaylist.validTo) {
+        _G.playbackLog.log('Fro: ' + swPlaylist.validFrom + ' Til: ' + swPlaylist.validTo, playlistNode.id)
       }
 
       playlistNode.stopPlayback = function () { // this === playlistNode
@@ -194,7 +197,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
       // Medias
       let firstMediaNode
       let lastMediaNode
-      async.forEachOf(playlist.playlistMedias, (swMedia, playlistMediaEid, callback) => {
+      async.forEachOf(swPlaylist.playlistMedias, (swMedia, playlistMediaEid, callback) => {
         swMedia.mediaNode = document.createElement('div')
         let mediaNode = swMedia.mediaNode
         mediaNode.playlistNode = playlistNode
@@ -210,6 +213,10 @@ module.exports.render = (_G, configuration, mainCallback) => {
         mediaNode.id = mediaNode.parentNode.id + '.' + swMedia.mediaEid
         mediaNode.style.visibility = 'hidden'
         mediaNode.className = 'media'
+
+        if (swMedia.validFrom || swMedia.validTo) {
+          _G.playbackLog.log('Fro: ' + swMedia.validFrom + ' Til: ' + swMedia.validTo, mediaNode.id)
+        }
 
         mediaNode.stopPlayback = function () { // this === mediaNode
           let self = this
@@ -268,7 +275,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
         }
         insertMedia(_G, mediaNode, swMedia, callback)
       }, function (err) {
-        if (playlist.loop !== false) {
+        if (swPlaylist.loop !== false) {
           _G.playbackLog.log('Set loop', playlistNode.id)
           lastMediaNode.nextMediaNode = firstMediaNode
         } else {
@@ -358,7 +365,10 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.id = mediaNode.id + '.url'
     // Properties and methods not present natively
     // mediaDomElement.currentTime = 0
-    mediaDomElement.play = () => {}
+    mediaDomElement.play = function() {
+      console.log('reloading ', mediaDomElement)
+      mediaDomElement.contentWindow.location.reload()
+    }
     mediaDomElement.pause = () => {}
     return callback()
   }

@@ -15,93 +15,73 @@ module.exports.fetchConfiguration = (_G, callback) => {
   }
 
   fs.readFile(_G.confFilePath, (err, configuration) => {
-    if (err) {
-      _G.playbackLog.log('readFile errored')
-    }
-    else {
-      _G.configurationTs = (new Date(JSON.parse(configuration).publishedAt)).getTime()
-      // _G.playbackLog.log(_G.configurationTs)
-    }
+    _G.configurationTs = (
+      err ? 0 : (new Date(JSON.parse(configuration).publishedAt)).getTime()
+    )
 
-    let data = ''
-    _G.playbackLog.log('Requesting ' + _G.SCREENWERK_API + _G.SCREEN_EID)
-    request(_G.SCREENWERK_API + _G.SCREEN_EID)
-    .on('response', (res) => {
-      if (res.statusCode !== 200) {
-        _G.playbackLog.log('statusCode: ' + res.statusCode)
-        // _G.playbackLog.log(res.headers)
-        _G.playbackLog.log(' = CALLBACK from response !200')
-        return callback(res)
-      }
-      else {
-        _G.playbackLog.log('statusCode: ' + res.statusCode)
-        // _G.playbackLog.log(res.headers)
-      }
-    })
-    .on('error', (err) => {
-      _G.playbackLog.log(' = CALLBACK from error')
-      return callback(err)
-    })
-    .on('data', (d) => {
-      data = data + d
-    })
-    .on('end', () => {
-      let configuration = JSON.parse(data)
-      if (configuration.error) {
-        // window.alert(data)
+    let conf_url = _G.SCREENWERK_API + _G.SCREEN_EID + '.json'
+    _G.playbackLog.log('Requesting ' + conf_url)
+    let options = {
+      headers: { 'User-Agent': _G.packageJson.productName + ' version ' + _G.packageJson.version },
+      uri: conf_url
+    }
+    request(options, function(error, response, data) {
+
+      if (error) {
+        console.error('err', error)
+        _G.playbackLog.log('Error', error.code)
         fs.unlink(_G.tempConfFilePath, () => {
-          if (configuration.error.code === 401) {
-            // console.info('INFO:', data)
-            _G.playbackLog.log(' = CALLBACK from end conf error 401')
-            return callback(configuration.error, _G.codes.CONFIGURATION_NOT_AVAILABLE_YET)
-          }
-          else {
-            // console.error('ERROR:', data)
-            _G.playbackLog.log(' = CALLBACK from end conf error')
-            return callback(configuration.error, _G.codes.CONFIGURATION_FETCH_FAILED)
-          }
+          return callback(error)
         })
-        // return
+        return
       }
-      // console.info('INFO:', data)
+
+      if (response.statusCode !== 200) {
+        console.error('code', response.statusCode)
+        _G.playbackLog.log(' Response !200', response.statusCode)
+        fs.unlink(_G.tempConfFilePath, () => {
+          return callback(response)
+        })
+        return
+      }
+
+      let configuration = JSON.parse(data)
       let configurationTs = new Date(configuration.publishedAt).getTime()
       if (configurationTs === _G.configurationTs) {
         fs.unlink(_G.tempConfFilePath, () => {
-          // _G.playbackLog.log(_G.codes.CONFIGURATION_NOT_UPDATED)
-          _G.playbackLog.log(' = CALLBACK from CONFIGURATION_NOT_UPDATED')
+          _G.playbackLog.log('CONFIGURATION_NOT_UPDATED')
           return callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
         })
-      } else {
-        _G.playbackLog.log('got updates')
-        _G.playbackLog.log('_G.configurationTs <- configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs)
-        _G.configurationTs = configurationTs
-        loadMedias(_G, configuration, () => {
-          fs.writeFileSync(_G.confFilePath, JSON.stringify(configuration, null, 2))
-          fs.unlink(_G.tempConfFilePath, () => {
-            async.whilst(
-              () => { return document.getElementById('downloads').hasChildNodes() },
-              (whilst_callback) => {
-                setTimeout(function () {
-                  if (document.getElementById('downloads').childNodes.length) {
-                    document.getElementById('downloads').removeChild(document.getElementById('downloads').lastChild)
-                  }
-                  whilst_callback(null)
-                }, 100)
-              },
-              (err) => {
-                if (err) {
-                  _G.playbackLog.log('removing progressbars errored somehow')
-                  // TODO: QUESTION: WTF:
-                  // Why are we not calling back here?
-                  return
-                }
-                _G.playbackLog.log(' = CALLBACK from async unlink')
-                return callback(null, _G.codes.CONFIGURATION_UPDATED)
-              }
-            )
-          })
-        })
+        return
       }
+
+      _G.playbackLog.log('Got updates. Set _G.configurationTs: ' + _G.configurationTs + ' <- ' + configurationTs)
+      _G.configurationTs = configurationTs
+
+      loadMedias(_G, configuration, () => {
+        fs.writeFileSync(_G.confFilePath, JSON.stringify(configuration, null, 2))
+        fs.unlink(_G.tempConfFilePath, () => {
+          async.whilst(
+            () => { return document.getElementById('downloads').hasChildNodes() },
+            (whilst_callback) => {
+              setTimeout(function () {
+                if (document.getElementById('downloads').childNodes.length) {
+                  document.getElementById('downloads').removeChild(document.getElementById('downloads').lastChild)
+                }
+                whilst_callback(null)
+              }, 100)
+            },
+            (error) => {
+              if (error) {
+                _G.playbackLog.log(error)
+                return callback(error)
+              }
+              _G.playbackLog.log('CONFIGURATION_UPDATED')
+              return callback(null, _G.codes.CONFIGURATION_UPDATED)
+            }
+          )
+        })
+      })
     })
     .pipe(fs.createWriteStream(_G.tempConfFilePath))
   })

@@ -9,24 +9,34 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
   console.log('Globals loaded')
   const sync = require(path.resolve(__dirname, 'sync.js'))
 
+  // Gets executed only on program start.
+  // Reinvokes itself until CONFIGURATION_FILE_OK
   const readConfiguration = (_G, callback) => {
     fs.readFile(_G.confFilePath, (err, configuration) => {
       if (!err) { // Metafile is present, media should be up to date
-        return callback(_G.codes.CONFIGURATION_FILE_OK, JSON.parse(configuration))
+        try {
+          let configuration = JSON.parse(configuration)
+          return callback(_G.codes.CONFIGURATION_FILE_OK, JSON.parse(configuration))
+        } catch (e) {
+          _G.playbackLog.log('Can\'t parse ' + _G.confFilePath + '. Fetch a fresh one.')
+          fs.unlinkSync(_G.confFilePath)
+        }
       }
 
       // Metafile not present for screen
-      setTimeout(() => { readConfiguration(_G, callback) }, 1e3)
 
       fs.access(_G.tempConfFilePath, fs.F_OK, (err) => {
         if (!err) { // Metafile download in progress
+          setTimeout(() => { readConfiguration(_G, callback) }, 1e3) // retry in a sec
           return callback(_G.codes.CONFIGURATION_DOWNLOAD_IN_PROGRESS)
         }
-        sync.fetchConfiguration(_G, (err, code) => {
-          if (err) {
-            _G.playbackLog.log('sync.fetchConfiguration errored')
+        sync.fetchConfiguration(_G, (error, code) => {
+          if (error) {
+            _G.playbackLog.log(error.toJSON().statusCode)
+            setTimeout(() => { readConfiguration(_G, callback) }, 30e3) // retry in 30sec
+            return callback(error.toJSON().statusCode)
           }
-          // console.log('fetchConfiguration returned with', code)
+          // Got positive result from fetchConfiguration
           return callback(code)
         })
         return callback(_G.codes.CONFIGURATION_FILE_NOT_PRESENT)
@@ -34,9 +44,16 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
     })
   }
 
+  let IS_CONFIGURATION_FILE_OK = false
   readConfiguration(_G, (code, jsonData) => {
+    if (IS_CONFIGURATION_FILE_OK) {
+      _G.playbackLog('Callback allready called', '[WARNING]')
+      return
+    }
     _G.playbackLog.log(code)
     if (code === _G.codes.CONFIGURATION_FILE_OK) {
+      IS_CONFIGURATION_FILE_OK = true
+      _G.playbackLog.log('CONFIGURATION_FILE_OK. Start playback')
       playConfiguration(_G, jsonData)
       pollUpdates(_G)
       return
@@ -70,7 +87,7 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
       // console.log('poll finished')
       setTimeout(function () {
         pollUpdates(_G)
-      }, 10e3)
+      }, 30e3)
     })
   }
 })
