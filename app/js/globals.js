@@ -25,6 +25,7 @@ module.exports = (callback) => {
   let _G = {} // Globals. Paths, screenEid, etc.
 
   _G.packageJson = require(path.resolve(__dirname, '..', '..', 'package.json'))
+  _G.gitBranch = fs.readFileSync(path.resolve(__dirname, '..', '..', '.git', 'HEAD'), 'utf8')
 
   _G.codes = {
     CONFIGURATION_DOWNLOAD_IN_PROGRESS: 'CONFIGURATION_DOWNLOAD_IN_PROGRESS',
@@ -179,7 +180,7 @@ module.exports = (callback) => {
     _G.playbackLog.write(when + where + (id ? ' [' + id + ']' : '') + ' ' + text + '\n')
   }
 
-  _G.playbackLog.log(_G.packageJson.productName + ' version ' + _G.packageJson.version)
+  _G.playbackLog.log(_G.packageJson.productName + ' version ' + _G.packageJson.version + '@' + _G.gitBranch.split(': ')[1])
 
   // _G.SCREEN_EID = credentials.SCREEN_EID
   // _G.SCREEN_KEY = credentials.SCREEN_KEY
