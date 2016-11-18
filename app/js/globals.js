@@ -25,6 +25,8 @@ module.exports = (callback) => {
   let _G = {} // Globals. Paths, screenEid, etc.
 
   _G.packageJson = require(path.resolve(__dirname, '..', '..', 'package.json'))
+  let gitbranch = fs.readFileSync(path.resolve(__dirname, '..', '..', '.git', 'HEAD'), 'utf8').split(': ')[1].split('/')
+  _G.gitBranch = String(gitbranch[gitbranch.length - 1])
 
   _G.codes = {
     CONFIGURATION_DOWNLOAD_IN_PROGRESS: 'CONFIGURATION_DOWNLOAD_IN_PROGRESS',
@@ -74,30 +76,15 @@ module.exports = (callback) => {
     }
   })
 
-  _G.playbackLog = fs.createWriteStream(path.resolve(_G.HOME_PATH, 'playback.log'))
-  _G.playbackLog.setDefaultEncoding('utf8')
-  _G.playbackLog.log = function(text, id) {
-    let when = new Date().toJSON().slice(11).replace(/[TZ]/g, ' ')
-    let stack = __stack[1].toString()
-    let method = stack.split(' ')[0].split('.').pop()
-    let where = (
-      (
-        (stack.split('/').pop().split(':')[0])
-        .split('.')[0]
-        + ':' + stack.split('/').pop().split(':')[1]
-        + new Array(15).join(' ')
-      ).slice(0,15)
-      + ' ' + method
-      + new Array(35).join(' ')
-    ).slice(0,35)
-
-    if (typeof text === 'object') {
-      text = util.inspect(text)
-    }
-    _G.playbackLog.write(when + where + (id ? ' [' + id + ']' : '') + ' ' + text + '\n')
+  _G.checkInternet = function(cb) {
+    require('dns').lookup('google.com',function(err) {
+      if (err && err.code == "ENOTFOUND") {
+        cb(false)
+      } else {
+        cb(true)
+      }
+    })
   }
-
-  _G.playbackLog.log(_G.packageJson.productName + ' version ' + _G.packageJson.version)
 
   function closeWithMessage (message) {
     window.alert(message)
@@ -163,11 +150,44 @@ module.exports = (callback) => {
     _G[ix] = credentials[ix]
   }
   console.log(credentials)
+
+  let logFileName = _G.SCREEN_EID + '.playback.log'
+  let prevLogFileName = _G.SCREEN_EID + '.playback(0).log'
+  try {
+    fs.renameSync(path.resolve(_G.HOME_PATH, logFileName), path.resolve(_G.HOME_PATH, prevLogFileName))
+  } catch (e) {
+    null
+  }
+  _G.playbackLog = fs.createWriteStream(path.resolve(_G.HOME_PATH, logFileName))
+  _G.playbackLog.setDefaultEncoding('utf8')
+  _G.playbackLog.log = function(text, id) {
+    let when = new Date().toJSON().slice(11).replace(/[TZ]/g, ' ')
+    let stack = __stack[1].toString()
+    let method = stack.split(' ')[0].split('.').pop()
+    let where = (
+      (
+        (stack.split('/').pop().split(':')[0])
+        .split('.')[0]
+        + ':' + stack.split('/').pop().split(':')[1]
+        + new Array(15).join(' ')
+      ).slice(0,15)
+      + ' ' + method
+      + new Array(35).join(' ')
+    ).slice(0,35)
+
+    if (typeof text === 'object') {
+      text = util.inspect(text)
+    }
+    _G.playbackLog.write(when + where + (id ? ' [' + id + ']' : '') + ' ' + text + '\n')
+  }
+
+  _G.playbackLog.log(_G.packageJson.productName + ' version ' + _G.packageJson.version + '@' + _G.gitBranch.split(': ')[1])
+
   // _G.SCREEN_EID = credentials.SCREEN_EID
   // _G.SCREEN_KEY = credentials.SCREEN_KEY
   // _G.DISPLAY_NUM = credentials.DISPLAY_NUM
   // _G.DEV_MODE = credentials.DEV_MODE
-  _G.SCREENWERK_API = 'https://swpublisher.entu.eu/configuration/'
+  _G.SCREENWERK_API = 'https://swpublisher.entu.eu/screen/'
 
   _G.setScreenEid = (_G, eid) => {
     let credentials = readCredentials(_G)

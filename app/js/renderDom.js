@@ -1,5 +1,6 @@
 const async = require('async')
 const fs = require('fs')
+const util = require('util')
 const later = require('later')
 const path = require('path')
 
@@ -24,6 +25,12 @@ const getOrderedSchedules = (_G, schedules) => {
     })
 }
 
+const isValid = (obj) => {
+  let now = new Date().getTime()
+  let fro = obj.validFrom ? new Date(obj.validFrom).getTime() : now - 1
+  let til = obj.validTo ? new Date(obj.validTo) : now + 1
+  return (now > fro && now < til)
+}
 
 module.exports.render = (_G, configuration, mainCallback) => {
   document.body.style.cursor = 'none'
@@ -88,11 +95,6 @@ module.exports.render = (_G, configuration, mainCallback) => {
 
     layoutNode.startPlayback = function () { // this === layoutNode
       let self = this
-      //
-      // if (self.playbackStatus === 'stopped') {
-      //   _G.playbackLog.log('Already stopped ' + self.swSchedule.name + ' schedule')
-      //   return
-      // }
       _G.playbackLog.log('start ' + self.swSchedule.name, self.id)
       if (self.swSchedule.cleanup) {
         _G.playbackLog.log(self.swSchedule.name + ' requesting cleanup', self.id)
@@ -148,25 +150,28 @@ module.exports.render = (_G, configuration, mainCallback) => {
     }
 
     // Playlists
-    async.forEachOf(layoutNode.swSchedule.layoutPlaylists, (playlist, layoutPlaylistEid, callback) => {
-      playlist.playlistNode = document.createElement('div')
-      let playlistNode = playlist.playlistNode
-      // playlistNode.swPlaylist = playlist
+    async.forEachOf(layoutNode.swSchedule.layoutPlaylists, (swPlaylist, layoutPlaylistEid, callback) => {
+      swPlaylist.playlistNode = document.createElement('div')
+      let playlistNode = swPlaylist.playlistNode
       layoutNode.appendChild(playlistNode)
-      playlistNode.id = playlistNode.parentNode.id + '.' + playlist.playlistEid
+      playlistNode.id = playlistNode.parentNode.id + '.' + swPlaylist.playlistEid
       playlistNode.className = 'playlist'
-      playlistNode.swPlaylist = playlist
-      if (playlist.inPixels) {
-        playlistNode.style.top = (playlist.top / layoutNode.swSchedule.height * 100) + '%'
-        playlistNode.style.left = (playlist.left / layoutNode.swSchedule.width * 100) + '%'
-        playlistNode.style.width = (playlist.width / layoutNode.swSchedule.width * 100) + '%'
-        playlistNode.style.height = (playlist.height / layoutNode.swSchedule.height * 100) + '%'
+      playlistNode.swPlaylist = swPlaylist
+      if (swPlaylist.inPixels) {
+        playlistNode.style.top = (swPlaylist.top / layoutNode.swSchedule.height * 100) + '%'
+        playlistNode.style.left = (swPlaylist.left / layoutNode.swSchedule.width * 100) + '%'
+        playlistNode.style.width = (swPlaylist.width / layoutNode.swSchedule.width * 100) + '%'
+        playlistNode.style.height = (swPlaylist.height / layoutNode.swSchedule.height * 100) + '%'
       }
       else {
-        playlistNode.style.top = playlist.top + '%'
-        playlistNode.style.left = playlist.left + '%'
-        playlistNode.style.width = playlist.width + '%'
-        playlistNode.style.height = playlist.height + '%'
+        playlistNode.style.top = swPlaylist.top + '%'
+        playlistNode.style.left = swPlaylist.left + '%'
+        playlistNode.style.width = swPlaylist.width + '%'
+        playlistNode.style.height = swPlaylist.height + '%'
+      }
+
+      if (swPlaylist.validFrom || swPlaylist.validTo) {
+        _G.playbackLog.log('Fro: ' + swPlaylist.validFrom + ' Til: ' + swPlaylist.validTo, playlistNode.id)
       }
 
       playlistNode.stopPlayback = function () { // this === playlistNode
@@ -194,7 +199,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
       // Medias
       let firstMediaNode
       let lastMediaNode
-      async.forEachOf(playlist.playlistMedias, (swMedia, playlistMediaEid, callback) => {
+      async.forEachOf(swPlaylist.playlistMedias, (swMedia, playlistMediaEid, callback) => {
         swMedia.mediaNode = document.createElement('div')
         let mediaNode = swMedia.mediaNode
         mediaNode.playlistNode = playlistNode
@@ -210,6 +215,10 @@ module.exports.render = (_G, configuration, mainCallback) => {
         mediaNode.id = mediaNode.parentNode.id + '.' + swMedia.mediaEid
         mediaNode.style.visibility = 'hidden'
         mediaNode.className = 'media'
+
+        if (swMedia.validFrom || swMedia.validTo) {
+          _G.playbackLog.log('Fro: ' + swMedia.validFrom + ' Til: ' + swMedia.validTo, mediaNode.id)
+        }
 
         mediaNode.stopPlayback = function () { // this === mediaNode
           let self = this
@@ -237,6 +246,17 @@ module.exports.render = (_G, configuration, mainCallback) => {
             _G.playbackLog.log('Cant start ' + self.name + ' playlistMedias in stopped playlist', self.id)
             return
           }
+
+          if (!isValid(self.swMedia)) {
+            _G.playbackLog.log('Media not valid currently: ' + self.swMedia.validFrom + '<' + new Date() + '<' + self.swMedia.validTo, self.swMedia.playlistMediaEid)
+            if (self.nextMediaNode) {
+              self.nextMediaNode.startPlayback()
+              return
+            } else {
+              _G.playbackLog.log('Playlist finished. No next media to load.', self.id)
+            }
+          }
+
           self.playbackStatus = 'started'
           _G.playbackLog.log('Start media ' + self.swMedia.name, self.id)
           self.style.visibility = 'visible'
@@ -268,7 +288,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
         }
         insertMedia(_G, mediaNode, swMedia, callback)
       }, function (err) {
-        if (playlist.loop !== false) {
+        if (swPlaylist.loop !== false) {
           _G.playbackLog.log('Set loop', playlistNode.id)
           lastMediaNode.nextMediaNode = firstMediaNode
         } else {
@@ -358,7 +378,10 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.id = mediaNode.id + '.url'
     // Properties and methods not present natively
     // mediaDomElement.currentTime = 0
-    mediaDomElement.play = () => {}
+    mediaDomElement.play = function() {
+      console.log('reloading ', mediaDomElement)
+      mediaDomElement.contentWindow.location.reload()
+    }
     mediaDomElement.pause = () => {}
     return callback()
   }
