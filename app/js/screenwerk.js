@@ -52,7 +52,7 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
       return
     }
     _G.playbackLog.log(code)
-    if (code === _G.codes.CONFIGURATION_FILE_OK) {
+    if (code === _G.codes.CONFIGURATION_FILE_OK || code === _G.codes.CONFIGURATION_NOT_UPDATED || code === _G.codes.CONFIGURATION_UPDATED) {
       IS_CONFIGURATION_FILE_OK = true
       _G.playbackLog.log('CONFIGURATION_FILE_OK. Start playback')
       playConfiguration(_G, jsonData)
