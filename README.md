@@ -21,3 +21,10 @@
   - Screenwerk will launch and close with message telling you to set up the configuration. Location of configuration file - `./local/screen.yml` -  will be opened for you in explorer
 4. Update the value for SCREEN_EID
 6. Start the screenwerk with `npm start`
+
+
+### Changelog
+
+#### 0.3 new launch script for windows systems so that player starts even if git pull fails
+
+#### 0.2 respect valid-from and valid-to properties of playlist-media and media

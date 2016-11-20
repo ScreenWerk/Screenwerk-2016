@@ -181,7 +181,7 @@ module.exports = (callback) => {
     _G.playbackLog.write(when + where + (id ? ' [' + id + ']' : '') + ' ' + text + '\n')
   }
 
-  _G.playbackLog.log(_G.packageJson.productName + ' version ' + _G.packageJson.version + '@' + _G.gitBranch)
+  _G.playbackLog.log(_G.packageJson.productName + ' ' + _G.packageJson.version + '@' + _G.gitBranch)
 
   // _G.SCREEN_EID = credentials.SCREEN_EID
   // _G.SCREEN_KEY = credentials.SCREEN_KEY

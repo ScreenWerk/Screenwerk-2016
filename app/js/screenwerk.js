@@ -11,7 +11,7 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
   const sync = require(path.resolve(__dirname, 'sync.js'))
 
   // Gets executed only on program start.
-  // Reinvokes itself until CONFIGURATION_FILE_OK
+  // Reinvokes itself until positive result from fetchConfiguration
   const readConfiguration = (_G, callback) => {
     fs.readFile(_G.confFilePath, (err, configuration) => {
       if (!err) { // Metafile is present, media should be up to date
