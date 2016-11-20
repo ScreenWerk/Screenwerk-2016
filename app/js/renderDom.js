@@ -222,13 +222,13 @@ module.exports.render = (_G, configuration, mainCallback) => {
 
         mediaNode.stopPlayback = function () { // this === mediaNode
           let self = this
+          self.timers.forEach((timer) => {
+            clearTimeout(timer)
+          })
           if (self.playbackStatus === 'stopped') {
             _G.playbackLog.log('Already stopped ' + self.swMedia.name + ' playlistMedias', self.id)
             return
           }
-          self.timers.forEach((timer) => {
-            clearTimeout(timer)
-          })
           self.playbackStatus = 'stopped'
           _G.playbackLog.log('Stop  media ' + ' ' + self.swMedia.name, self.id)
           self.style.visibility = 'hidden'
