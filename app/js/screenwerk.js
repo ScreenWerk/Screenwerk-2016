@@ -31,14 +31,14 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
           setTimeout(() => { readConfiguration(_G, callback) }, 1e3) // retry in a sec
           return callback(_G.codes.CONFIGURATION_DOWNLOAD_IN_PROGRESS)
         }
-        sync.fetchConfiguration(_G, (error, code) => {
+        sync.fetchConfiguration(_G, (error, code, configuration) => {
           if (error) {
             _G.playbackLog.log(error.toJSON().statusCode)
             setTimeout(() => { readConfiguration(_G, callback) }, 30e3) // retry in 30sec
             return callback(error.toJSON().statusCode)
           }
           // Got positive result from fetchConfiguration
-          return callback(code)
+          return callback(code, configuration)
         })
         return callback(_G.codes.CONFIGURATION_FILE_NOT_PRESENT)
       })
