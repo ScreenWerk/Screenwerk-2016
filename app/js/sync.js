@@ -21,8 +21,9 @@ module.exports.fetchConfiguration = (_G, callback) => {
 
     let conf_url = _G.SCREENWERK_API + _G.SCREEN_EID + '.json'
     _G.playbackLog.log('Requesting ' + conf_url)
+    console.log(_G.packageJson.productName + ' ' + _G.packageJson.version + '@' + _G.gitBranch)
     let options = {
-      headers: { 'User-Agent': _G.packageJson.productName + ' version ' + _G.packageJson.version },
+      headers: { 'User-Agent': _G.packageJson.productName + ' ' + _G.packageJson.version + '@' + _G.gitBranch },
       uri: conf_url
     }
     request(options, function(error, response, data) {
@@ -50,7 +51,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
       if (configurationTs === _G.configurationTs) {
         fs.unlink(_G.tempConfFilePath, () => {
           _G.playbackLog.log('CONFIGURATION_NOT_UPDATED')
-          return callback(null, _G.codes.CONFIGURATION_NOT_UPDATED)
+          return callback(null, _G.codes.CONFIGURATION_NOT_UPDATED, configuration)
         })
         return
       }
@@ -77,7 +78,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
                 return callback(error)
               }
               _G.playbackLog.log('CONFIGURATION_UPDATED')
-              return callback(null, _G.codes.CONFIGURATION_UPDATED)
+              return callback(null, _G.codes.CONFIGURATION_UPDATED, configuration)
             }
           )
         })

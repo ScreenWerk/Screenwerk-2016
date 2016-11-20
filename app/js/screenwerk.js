@@ -11,7 +11,7 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
   const sync = require(path.resolve(__dirname, 'sync.js'))
 
   // Gets executed only on program start.
-  // Reinvokes itself until CONFIGURATION_FILE_OK
+  // Reinvokes itself until positive result from fetchConfiguration
   const readConfiguration = (_G, callback) => {
     fs.readFile(_G.confFilePath, (err, configuration) => {
       if (!err) { // Metafile is present, media should be up to date
@@ -31,14 +31,14 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
           setTimeout(() => { readConfiguration(_G, callback) }, 1e3) // retry in a sec
           return callback(_G.codes.CONFIGURATION_DOWNLOAD_IN_PROGRESS)
         }
-        sync.fetchConfiguration(_G, (error, code) => {
+        sync.fetchConfiguration(_G, (error, code, configuration) => {
           if (error) {
             _G.playbackLog.log(error.toJSON().statusCode)
             setTimeout(() => { readConfiguration(_G, callback) }, 30e3) // retry in 30sec
             return callback(error.toJSON().statusCode)
           }
           // Got positive result from fetchConfiguration
-          return callback(code)
+          return callback(code, configuration)
         })
         return callback(_G.codes.CONFIGURATION_FILE_NOT_PRESENT)
       })
@@ -52,7 +52,7 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
       return
     }
     _G.playbackLog.log(code)
-    if (code === _G.codes.CONFIGURATION_FILE_OK) {
+    if (code === _G.codes.CONFIGURATION_FILE_OK || code === _G.codes.CONFIGURATION_NOT_UPDATED || code === _G.codes.CONFIGURATION_UPDATED) {
       IS_CONFIGURATION_FILE_OK = true
       _G.playbackLog.log('CONFIGURATION_FILE_OK. Start playback')
       playConfiguration(_G, jsonData)

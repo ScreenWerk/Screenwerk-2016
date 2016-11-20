@@ -1,5 +1,6 @@
 const async = require('async')
 const fs = require('fs')
+const util = require('util')
 const later = require('later')
 const path = require('path')
 
@@ -24,8 +25,18 @@ const getOrderedSchedules = (_G, schedules) => {
     })
 }
 
+const isValid = (obj) => {
+  let now = new Date().getTime()
+  let fro = obj.validFrom ? new Date(obj.validFrom).getTime() : now - 1
+  let til = obj.validTo ? new Date(obj.validTo) : now + 1
+  return (now > fro && now < til)
+}
 
+var scheduleTimers = []
 module.exports.render = (_G, configuration, mainCallback) => {
+  scheduleTimers.forEach((timer) => {
+    clearTimeout(timer)
+  })
   document.body.style.cursor = 'none'
   if (_G.DEV_MODE) {
     document.body.style.cursor = 'crosshair'
@@ -88,11 +99,6 @@ module.exports.render = (_G, configuration, mainCallback) => {
 
     layoutNode.startPlayback = function () { // this === layoutNode
       let self = this
-      //
-      // if (self.playbackStatus === 'stopped') {
-      //   _G.playbackLog.log('Already stopped ' + self.swSchedule.name + ' schedule')
-      //   return
-      // }
       _G.playbackLog.log('start ' + self.swSchedule.name, self.id)
       if (self.swSchedule.cleanup) {
         _G.playbackLog.log(self.swSchedule.name + ' requesting cleanup', self.id)
@@ -112,9 +118,9 @@ module.exports.render = (_G, configuration, mainCallback) => {
 
       // Schedule next occurrance from crontab
       _G.playbackLog.log('Schedule playback of schedule ' + self.swSchedule.name + ' in ' + ms_until_next_playback/1e3 + 's.', self.id)
-      setTimeout(() => {
+      scheduleTimers.push(setTimeout(() => {
         self.startPlayback()
-      }, ms_until_next_playback)
+      }, ms_until_next_playback))
 
       // Stop if duration already exceeded by now
       if (self.swSchedule.duration && self.swSchedule.duration * 1e3 < ms_from_latest_playback) {
@@ -129,10 +135,10 @@ module.exports.render = (_G, configuration, mainCallback) => {
         if (self.swSchedule.duration && self.swSchedule.duration * 1e3 < (ms_from_latest_playback + ms_until_next_playback)) {
           let ms_left = self.swSchedule.duration * 1e3 - ms_from_latest_playback
           ms_left = (ms_left < 10 ? 10 : ms_left)
-          setTimeout(function () {
+          self.timers.push(setTimeout(function () {
             _G.playbackLog.log('STOP    ' + self.swSchedule.name + ' from timeout.', self.id)
             self.stopPlayback()
-          }, ms_left)
+          }, ms_left))
         }
         self.playbackStatus = 'started'
         _G.playbackLog.log(self.swSchedule.name + ' layout status = "started".', self.id)
@@ -220,13 +226,13 @@ module.exports.render = (_G, configuration, mainCallback) => {
 
         mediaNode.stopPlayback = function () { // this === mediaNode
           let self = this
+          self.timers.forEach((timer) => {
+            clearTimeout(timer)
+          })
           if (self.playbackStatus === 'stopped') {
             _G.playbackLog.log('Already stopped ' + self.swMedia.name + ' playlistMedias', self.id)
             return
           }
-          self.timers.forEach((timer) => {
-            clearTimeout(timer)
-          })
           self.playbackStatus = 'stopped'
           _G.playbackLog.log('Stop  media ' + ' ' + self.swMedia.name, self.id)
           self.style.visibility = 'hidden'
@@ -244,6 +250,17 @@ module.exports.render = (_G, configuration, mainCallback) => {
             _G.playbackLog.log('Cant start ' + self.name + ' playlistMedias in stopped playlist', self.id)
             return
           }
+
+          if (!isValid(self.swMedia)) {
+            _G.playbackLog.log('Media not valid currently: ' + self.swMedia.validFrom + '<' + new Date() + '<' + self.swMedia.validTo, self.swMedia.playlistMediaEid)
+            if (self.nextMediaNode) {
+              self.nextMediaNode.startPlayback()
+              return
+            } else {
+              _G.playbackLog.log('Playlist finished. No next media to load.', self.id)
+            }
+          }
+
           self.playbackStatus = 'started'
           _G.playbackLog.log('Start media ' + self.swMedia.name, self.id)
           self.style.visibility = 'visible'
