@@ -6,7 +6,7 @@
   "main": "main.js",
   "scripts": {
     "postinstall": "electron app/main.js",
-    "prestart": "git pull",
+    "prestart": "git pull && npm update",
     "start": "electron app/main.js"
   },
   "homepage": "https://github.com/mitselek/Screenwerk-2016#readme",
