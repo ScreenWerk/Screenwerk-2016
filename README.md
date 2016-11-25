@@ -25,6 +25,8 @@
 
 ### Changelog
 
+#### 0.4 update electron to 1.4.7
+
 #### 0.3 new launch script for windows systems so that player starts even if git pull fails
 
 #### 0.2 respect valid-from and valid-to properties of playlist-media and media
