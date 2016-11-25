@@ -268,7 +268,7 @@ module.exports.render = (_G, configuration, mainCallback) => {
           try {
             this.firstChild.play()
           } catch (err) {
-            _G.playbackLog.log('media.play() errored for ' + self.id + '.', self.id)
+            _G.playbackLog.log('media.play() errored.', self.id)
             _G.playbackLog.log(err, self.id)
           }
             // .catch( function(reason) {
@@ -375,16 +375,27 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     return callback()
   }
   else if (swMedia.type === _G.codes.MEDIA_TYPE_URL) {
-    let mediaDomElement = document.createElement('IFRAME')
-    mediaDomElement.src = swMedia.url
-    mediaDomElement.scrolling = 'yes'
-    mediaNode.appendChild(mediaDomElement)
-    mediaDomElement.id = mediaNode.id + '.url'
+    function createIframe(url, id) {
+      let mediaDomElement = document.createElement('IFRAME')
+      mediaDomElement.src = url
+      mediaDomElement.scrolling = 'yes'
+      mediaNode.appendChild(mediaDomElement)
+      mediaDomElement.id = id + '.url'
+      return mediaDomElement
+    }
+    let mediaDomElement = createIframe(swMedia.url, mediaNode.id)
     // Properties and methods not present natively
     // mediaDomElement.currentTime = 0
     mediaDomElement.play = function() {
-      console.log('reloading ', mediaDomElement)
-      mediaDomElement.contentWindow.location.reload()
+      if (mediaDomElement.contentWindow) {
+        _G.playbackLog.log('reloading URL', mediaNode.id)
+        mediaDomElement.contentWindow.location.reload()
+      }
+      else {
+        _G.playbackLog.log('ERROR: Nothing to reload! Create new!?', mediaNode.id)
+        console.log('ERROR: Nothing to reload! Create new!?', mediaNode.id)
+        createIframe(swMedia.url, mediaNode.id)
+      }
     }
     mediaDomElement.pause = () => {}
     return callback()
