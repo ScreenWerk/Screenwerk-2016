@@ -23,7 +23,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
     _G.playbackLog.log('Requesting ' + conf_url)
     console.log(_G.packageJson.productName + ' ' + _G.packageJson.version + '@' + _G.gitBranch)
     let options = {
-      headers: { 'User-Agent': _G.packageJson.productName + ' ' + _G.packageJson.version + '@' + _G.gitBranch + ';E@' + _G.packageJson.devDependencies.electron},
+      headers: { 'User-Agent': _G.packageJson.productName + ' ' + _G.packageJson.version + '@' + _G.gitBranch + ';' + _G.packageJson.devDependencies.electron},
       uri: conf_url
     }
     request(options, function(error, response, data) {
@@ -104,23 +104,30 @@ const loadMedias = (_G, configuration, loadMediasCB) => {
     let progressBar = document.getElementById(task.eid + '_progress')
     let chunkCount = 0
     progressBar.style.width = '0%'
-    progressBar.style['background-color'] = 'lightgray'
+    progressBar.style['background-color'] = DOWNLOAD_STATUS.PROGRESS
     progressBar.style.height = '2px'
     fs.access(task.tempFilePath, fs.F_OK, (err) => {
-      if (err) {
+      if (!err) {
+        return taskCallback(null)
+      }
+      else {
         fs.access(task.filePath, fs.F_OK, (err) => {
-          if (err) {
+          if (!err) {
+            progressBar.style['background-color'] = DOWNLOAD_STATUS.OK
+            progressBar.style.width = '100%'
+            return taskCallback(null)
+          }
+          else {
             request(task.url)
               .on('response', (res) => {
                 // _G.playbackLog.log('response', task.eid)
                 fileSize = Number(res.headers['content-length'])
                 var textNode = document.createTextNode('; ' + bytesToSize(fileSize) + ' to download.')
-                document.getElementById(task.eid).appendChild(textNode)
-                document.getElementById(task.eid).appendChild(progressBar)
+                document.getElementById(task.eid + '_download').appendChild(textNode)
+                document.getElementById(task.eid + '_download').appendChild(progressBar)
               })
               .on('error', (err) => {
-                // _G.playbackLog.log(err.code, task.eid)
-                progressBar.style.height = '2px'
+                _G.playbackLog.log(err.code, task.eid)
               })
               .on('data', (d) => {
                 chunkCount ++
@@ -131,37 +138,34 @@ const loadMedias = (_G, configuration, loadMediasCB) => {
                 // if (new Date().getTime()%5500 === 42) { request.emit('error', 'test') }
               })
               .on('end', () => {
-                let color = (String(downloadedSize) === String(fileSize) ? 'green' : 'red')
+                let color = (String(downloadedSize) === String(fileSize) ? DOWNLOAD_STATUS.OK : DOWNLOAD_STATUS.FAILED)
                 // _G.playbackLog.log('end with ' + color, task.eid)
                 progressBar.style['background-color'] = color
                 progressBar.style.height = '2px'
                 if (color === 'green') {
                   progressBar.style.width = '100%'
                   fs.rename(task.tempFilePath, task.filePath, () => {
-                    taskCallback(null)
+                    return taskCallback(null)
                   })
-                } else {
+                }
+                else {
                   fs.unlink(task.tempFilePath, () => {
                     _G.playbackLog.log(util.inspect(downloadedSize) + ' !== ' + util.inspect(fileSize), task.eid)
-                    taskCallback('download failed', task.eid)
+                    return taskCallback('download failed', task.eid)
                   })
                 }
               })
               .pipe(fs.createWriteStream(task.tempFilePath))
-
             return
           }
-          progressBar.style['background-color'] = 'green'
-          // progressBar.style.height = '20px'
-          progressBar.style.width = '100%'
-          document.getElementById(task.eid).appendChild(document.createTextNode('; file exists: ' + task.filePath))
-          taskCallback(null)
+          // progressBar.style['background-color'] = DOWNLOAD_STATUS.OK
+          // progressBar.style.width = '100%'
+          // taskCallback(null)
         })
-
         return
       }
-      document.getElementById(task.eid).appendChild(document.createTextNode('; file already downloading: ' + task.tempFilePath))
-      taskCallback(null)
+      // document.getElementById(task.eid).appendChild(document.createTextNode('; file already downloading: ' + task.tempFilePath))
+      // taskCallback(null)
     })
   }, queueConcurrency)
 
@@ -173,32 +177,49 @@ const loadMedias = (_G, configuration, loadMediasCB) => {
     // loadMediasCB(null)
   }
 
+  const DOWNLOAD_STATUS = {
+    OK: 'green',
+    PROGRESS: 'lightgray',
+    FAILED: 'red'
+  }
+
   async.each(configuration.schedules, (schedule, callback) => {
     async.each(schedule.layoutPlaylists, (layoutPlaylist, callback) => {
       async.each(layoutPlaylist.playlistMedias, (playlistMedia, callback) => {
+
         if (playlistMedia.type === 'URL') {
           return callback()
         }
-        let downloadElement = document.createElement('div')
-        downloadElement.appendChild(
-          document.createElement('strong').appendChild(
-            document.createTextNode(playlistMedia.mediaEid)
+
+        let initDLElement = function(downloadElement, playlistMedia) {
+          downloadElement.progress_style = { 'background-color': DOWNLOAD_STATUS.PROGRESS }
+          downloadElement.appendChild(
+            document.createElement('strong').appendChild(
+              document.createTextNode(playlistMedia.mediaEid)
+            )
           )
-        )
-        downloadElement.id = playlistMedia.mediaEid
-        downloadElement.style = 'font-size: 5px;'
-        document.getElementById('downloads').appendChild(
-          downloadElement
-        )
+          downloadElement.id = playlistMedia.mediaEid + '_download'
+          downloadElement.style = 'font-size: 5px;'
+          document.getElementById('downloads').appendChild(
+            downloadElement
+          )
 
-        let textElement = document.createElement('div')
-        textElement.id = playlistMedia.mediaEid + '_text'
+          let progressBar = document.createElement('div')
+          downloadElement.appendChild(progressBar)
+          downloadElement.progressBar = progressBar
+          progressBar.id = playlistMedia.mediaEid + '_progress'
+          return downloadElement
+        }
 
-        let progressBar = document.createElement('div')
-        downloadElement.appendChild(progressBar)
-        progressBar.id = playlistMedia.mediaEid + '_progress'
+        let downloadElement_id = playlistMedia.mediaEid + '_download'
+        let downloadElement = document.getElementById(downloadElement_id)
+        if (downloadElement) { return callback() }
+        else { downloadElement = initDLElement(document.createElement('div'), playlistMedia) }
+
+        // Sets progressBar.style['background-color']
+        let progressBar = downloadElement.progressBar
+        progressBar.style = downloadElement.progress_style
         progressBar.style.width = '0%'
-        progressBar.style['background-color'] = 'lightgray'
         progressBar.style.height = '2px'
 
         let tempFilePath = path.resolve(_G.MEDIA_DIR, playlistMedia.mediaEid.toString() + '.download')
@@ -227,15 +248,15 @@ const loadMedias = (_G, configuration, loadMediasCB) => {
                 }
                 enqueueMedia(task, callback)
               } else { // Media file already present.
-                textElement.appendChild(document.createTextNode('; file exists: ' + filePath))
-                progressBar.style['background-color'] = 'green'
+                // textElement.appendChild(document.createTextNode('; file exists: ' + filePath))
+                progressBar.style['background-color'] = DOWNLOAD_STATUS.OK
                 progressBar.style.height = '2px'
                 progressBar.style.width = '100%'
                 callback()
               }
             })
           } else { // Media file already downloading.
-            document.getElementById(playlistMedia.mediaEid).appendChild(document.createTextNode('; file already downloading: ' + tempFilePath))
+            // document.getElementById(playlistMedia.mediaEid).appendChild(document.createTextNode('; file already downloading: ' + tempFilePath))
             callback()
           }
         })
