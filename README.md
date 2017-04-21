@@ -4,12 +4,16 @@
 ## Installation guide
 
 ### Windows
-1. Download source from https://github.com/mitselek/Screenwerk-2016/archive/master.zip to dir c:\ScreenWerk
-2. Install Node and Git from `installers` folder
-3. Run `npm install` from application folder
-  - Screenwerk will launch and close with message telling you to set up the configuration. Location of configuration file - `./local/screen.yml` -  will be opened for you in explorer
-4. Update the value for SCREEN_EID
-6. Start the screenwerk with `npm start`
+1. Download source from https://github.com/mitselek/Screenwerk-2016/archive/master.zip
+2. Extract downloaded `master.zip` to desired destination and rename the folder to `Screenwerk`
+3. Install `Git-****.exe` and `node-****.msi` from `installers` folder
+4. Open CMD from the `Screenwerk` folder
+5. Run `npm install` from the CMD window
+  - Screenwerk will launch after downloading necessary packages where it asks SCREEN-ID. Enter correct screen-id and press ENTER
+6. To start the Screenwerk, launch the `screenwerk.vbs` or run `npm start` command from the CMD in Screenwerk application folder
+7. Close Screenwerk with `ALT + F4`
+
+By default the Screenwerk starts on the second screen (if there are connected more than 1 screen to the PC). To change the start screen, you need to edit the file `./local/screen.yml`
 
 ### Windows (Statoil specific)
 
