@@ -5,13 +5,15 @@
 
 ### Windows
 1. Download source from https://github.com/mitselek/Screenwerk-2016/archive/master.zip
-2. Extract downloaded `master.zip` to desired destination and rename the folder to `Screenwerk`
+2. Extract downloaded `master.zip`
 3. Install `Git-****.exe` and `node-****.msi` from `installers` folder
-4. Open CMD from the `Screenwerk` folder
-5. Run `npm install` from the CMD window
+4. Open CMD in the desired root location
+5. Run `git clone https://github.com/mitselek/Screenwerk-2016.git` from the CMD window (it will create folder named Screenwerk-2016)
+6. Run `cd Screenwerk-2016` from the same CMD window
+7. Run `npm install` from the same CMD window (you have to be in the Screenwerk-2016 folder)
   - Screenwerk will launch after downloading necessary packages where it asks SCREEN-ID. Enter correct screen-id and press ENTER
-6. To start the Screenwerk, launch the `screenwerk.vbs` or run `npm start` command from the CMD in Screenwerk application folder
-7. Close Screenwerk with `ALT + F4`
+8. To start the Screenwerk, launch the `screenwerk.vbs` or run `npm start` command from the CMD in Screenwerk application folder
+9. Close Screenwerk with `ALT + F4`
 
 By default the Screenwerk starts on the second screen (if there are connected more than 1 screen to the PC). To change the start screen, you need to edit the file `./local/screen.yml`
 
