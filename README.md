@@ -2,14 +2,21 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e70ffe1eb0fb4886bf329b613ed3f263)](https://www.codacy.com/app/mihkel-putrinsh/Screenwerk-2016?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mitselek/Screenwerk-2016&amp;utm_campaign=Badge_Grade)
 
 ## Installation guide
+N/A
 
 ### Windows
-1. Download source from https://github.com/mitselek/Screenwerk-2016/archive/master.zip to dir c:\ScreenWerk
-2. Install Node and Git from `installers` folder
-3. Run `npm install` from application folder
-  - Screenwerk will launch and close with message telling you to set up the configuration. Location of configuration file - `./local/screen.yml` -  will be opened for you in explorer
-4. Update the value for SCREEN_EID
-6. Start the screenwerk with `npm start`
+1. Download source from https://github.com/mitselek/Screenwerk-2016/archive/master.zip
+2. Extract downloaded `master.zip`
+3. Install `Git-****.exe` (In the install dialogue, remove checkbox mark from the __"Enable GIT Credential Manager")__ and `node-****.msi` from `installers` folder
+4. Open CMD in the desired root location
+5. Run `git clone https://github.com/mitselek/Screenwerk-2016.git` from the CMD window (it will create folder named Screenwerk-2016)
+6. Run `cd Screenwerk-2016` from the same CMD window
+7. Run `npm install` from the same CMD window (you have to be in the Screenwerk-2016 folder)
+  - Screenwerk will launch after downloading necessary packages where it asks SCREEN-ID. Enter correct screen-id and press ENTER
+8. To start the Screenwerk, launch the `screenwerk.vbs` or run `npm start` command from the CMD in Screenwerk application folder
+9. Close Screenwerk with `ALT + F4`
+
+By default the Screenwerk starts on the second screen (if there are connected more than 1 screen to the PC). To change the start screen, you need to edit the file `./local/screen.yml`
 
 ### Windows (Statoil specific)
 

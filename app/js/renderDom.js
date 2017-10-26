@@ -32,7 +32,12 @@ const isValid = (obj) => {
   return (now > fro && now < til)
 }
 
-var scheduleTimers = []
+const logValid = (_G, swElement, node_id) => {
+  if (swElement.validFrom || swElement.validTo) {
+    _G.playbackLog.log('Fro: ' + swElement.validFrom + ' Til: ' + swElement.validTo, node_id)
+  }
+}
+
 module.exports.render = (_G, configuration, mainCallback) => {
   scheduleTimers.forEach((timer) => {
     clearTimeout(timer)
@@ -174,9 +179,10 @@ module.exports.render = (_G, configuration, mainCallback) => {
         playlistNode.style.height = swPlaylist.height + '%'
       }
 
-      if (swPlaylist.validFrom || swPlaylist.validTo) {
-        _G.playbackLog.log('Fro: ' + swPlaylist.validFrom + ' Til: ' + swPlaylist.validTo, playlistNode.id)
-      }
+      logValid(_G, swPlaylist, playlistNode.id)
+      // if (swPlaylist.validFrom || swPlaylist.validTo) {
+      //   _G.playbackLog.log('Fro: ' + swPlaylist.validFrom + ' Til: ' + swPlaylist.validTo, playlistNode.id)
+      // }
 
       playlistNode.stopPlayback = function () { // this === playlistNode
         let self = this
@@ -220,9 +226,10 @@ module.exports.render = (_G, configuration, mainCallback) => {
         mediaNode.style.visibility = 'hidden'
         mediaNode.className = 'media'
 
-        if (swMedia.validFrom || swMedia.validTo) {
-          _G.playbackLog.log('Fro: ' + swMedia.validFrom + ' Til: ' + swMedia.validTo, mediaNode.id)
-        }
+        logValid(_G, swPlaylist, mediaNode.id)
+        // if (swMedia.validFrom || swMedia.validTo) {
+        //   _G.playbackLog.log('Fro: ' + swMedia.validFrom + ' Til: ' + swMedia.validTo, mediaNode.id)
+        // }
 
         mediaNode.stopPlayback = function () { // this === mediaNode
           let self = this
@@ -319,8 +326,14 @@ module.exports.render = (_G, configuration, mainCallback) => {
 
 const insertMedia = (_G, mediaNode, swMedia, callback) => {
   // _G.playbackLog.log('Insert media ' + swMedia.mediaEid + '(' + mediaNode.id + ').', swMedia.type)
+  const timeNextMediaPlayback = (_mediaNode, delay) => {
+    _mediaNode.timers.push(setTimeout(function () {
+      _mediaNode.nextMediaNode.startPlayback()
+    }, delay))
+  }
   mediaNode.timers = []
   let mediaDomElement
+  
   if (swMedia.type === _G.codes.MEDIA_TYPE_VIDEO) {
     mediaDomElement = document.createElement('VIDEO')
     let mimetype = 'video/' + swMedia.fileName.split('.')[swMedia.fileName.split('.').length - 1]
@@ -343,9 +356,10 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
       _G.playbackLog.log('Video media ended. Start delay ' + swMedia.delay * 1e3 + 'ms', mediaNode.id)
       // _G.playbackLog.log('mediaNode.stopPlayback() from "video ended" event.')
       mediaNode.stopPlayback()
-      mediaNode.timers.push(setTimeout(function () {
-        mediaNode.nextMediaNode.startPlayback()
-      }, swMedia.delay * 1e3))
+      timeNextMediaPlayback(mediaNode, swMedia.delay * 1e3)
+      // mediaNode.timers.push(setTimeout(function () {
+      //   mediaNode.nextMediaNode.startPlayback()
+      // }, swMedia.delay * 1e3))
     })
     return callback()
   }
@@ -357,9 +371,10 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     mediaDomElement.addEventListener('ended', () => {
       _G.playbackLog.log('mediaNode.stopPlayback() from "audio ended" event.', mediaNode.id)
       mediaNode.stopPlayback()
-      mediaNode.timers.push(setTimeout(function () {
-        mediaNode.nextMediaNode.startPlayback()
-      }, swMedia.delay * 1e3))
+      timeNextMediaPlayback(mediaNode, swMedia.delay * 1e3)
+      // mediaNode.timers.push(setTimeout(function () {
+      //   mediaNode.nextMediaNode.startPlayback()
+      // }, swMedia.delay * 1e3))
     })
     return callback()
   }
