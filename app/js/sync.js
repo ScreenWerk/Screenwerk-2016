@@ -115,6 +115,7 @@ const loadMedias = (_G, configuration, loadMediasCB) => {
             request(task.url)
               .on('response', (res) => {
                 _G.playbackLog.log('Response code for task ' + task.eid, res.statusCode)
+                _G.playbackLog.log('Expected size for task ' + task.eid, res.headers['content-length'])
                 fileSize = Number(res.headers['content-length'])
                 var textNode = document.createTextNode('; ' + bytesToSize(fileSize) + ' to download.')
                 document.getElementById(task.eid).appendChild(textNode)
