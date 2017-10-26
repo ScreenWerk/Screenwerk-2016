@@ -28,8 +28,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
     }
     request(options, function(error, response, data) {
 
-      _G.playbackLog.log('Request ' + conf_url +
-                         ' Response status code ' + response.statusCode)
+      _G.playbackLog.log('Response code for ' + conf_url, response.statusCode)
 
       if (error) {
         console.error('err', error)
@@ -115,7 +114,7 @@ const loadMedias = (_G, configuration, loadMediasCB) => {
           if (err) {
             request(task.url)
               .on('response', (res) => {
-                // _G.playbackLog.log('response', task.eid)
+                _G.playbackLog.log('Response code for task ' + task.eid, res.statusCode)
                 fileSize = Number(res.headers['content-length'])
                 var textNode = document.createTextNode('; ' + bytesToSize(fileSize) + ' to download.')
                 document.getElementById(task.eid).appendChild(textNode)
