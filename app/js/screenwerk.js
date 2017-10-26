@@ -77,7 +77,9 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
   function pollUpdates (_G) {
     _G.playbackLog.log('start polling')
     sync.fetchConfiguration(_G, (err, code) => {
-      if (err) { _G.playbackLog.log('poll errored') }
+      if (err) {
+        _G.playbackLog.log('poll errored')
+      }
       _G.playbackLog.log('fetchConfiguration returned with: ' + code)
       if (code === _G.codes.CONFIGURATION_UPDATED) {
         fs.readFile(_G.confFilePath, (err, configuration) => {

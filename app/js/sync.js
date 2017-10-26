@@ -32,7 +32,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
         console.error('err', error)
         _G.playbackLog.log('Error', error.code)
         fs.unlink(_G.tempConfFilePath, () => {
-          return callback(error)
+          callback(error)
         })
         return
       }
@@ -41,7 +41,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
         console.error('code', response.statusCode)
         _G.playbackLog.log(' Response !200', response.statusCode)
         fs.unlink(_G.tempConfFilePath, () => {
-          return callback(response)
+          callback(response)
         })
         return
       }
@@ -51,7 +51,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
       if (configurationTs === _G.configurationTs) {
         fs.unlink(_G.tempConfFilePath, () => {
           _G.playbackLog.log('CONFIGURATION_NOT_UPDATED')
-          return callback(null, _G.codes.CONFIGURATION_NOT_UPDATED, configuration)
+          callback(null, _G.codes.CONFIGURATION_NOT_UPDATED, configuration)
         })
         return
       }
