@@ -28,6 +28,9 @@ module.exports.fetchConfiguration = (_G, callback) => {
     }
     request(options, function(error, response, data) {
 
+      _G.playbackLog.log('Request ' + conf_url +
+                         ' Response status code ' + response.statusCode)
+
       if (error) {
         console.error('err', error)
         _G.playbackLog.log('Error', error.code)
