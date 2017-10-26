@@ -74,7 +74,6 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
       _G.playbackLog.log('renderer returned with code: ' + code)
     })
   }
-
   function pollUpdates (_G) {
     _G.playbackLog.log('start polling')
     sync.fetchConfiguration(_G, (err, code) => {
@@ -83,10 +82,12 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
       }
       _G.playbackLog.log('fetchConfiguration returned with: ' + code)
       if (code === _G.codes.CONFIGURATION_UPDATED) {
-        setTimeout(function () {
-          app.relaunch()
-          app.quit()
-        }, 1500)
+        setTimeout(
+          () => {
+            app.relaunch()
+            app.quit()
+          }, 1
+        )
         fs.readFile(_G.confFilePath, (err, configuration) => {
           if (err) { _G.playbackLog.log('read conf errored') }
           playConfiguration(_G, JSON.parse(configuration))
