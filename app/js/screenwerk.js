@@ -4,6 +4,7 @@
 const path = require('path')
 const fs = require('fs')
 const util = require('util')
+const app = require('electron').remote.app
 
 console.log('Starting screenwerk.js')
 require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Paths, screenEid, etc.
@@ -82,6 +83,10 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
       }
       _G.playbackLog.log('fetchConfiguration returned with: ' + code)
       if (code === _G.codes.CONFIGURATION_UPDATED) {
+        setTimeout(function () {
+          app.relaunch()
+          app.quit()
+        }, 1500)
         fs.readFile(_G.confFilePath, (err, configuration) => {
           if (err) { _G.playbackLog.log('read conf errored') }
           playConfiguration(_G, JSON.parse(configuration))
