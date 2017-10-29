@@ -37,6 +37,15 @@ module.exports.fetchConfiguration = (_G, callback) => {
         return
       }
 
+      if (response === undefined) {
+        console.error('Missing response')
+        _G.playbackLog.log('Missing response')
+        fs.unlink(_G.tempConfFilePath, () => {
+          callback(null)
+        })
+        return
+      }
+
       _G.playbackLog.log('Response code for ' + conf_url, response.statusCode)
 
       if (response.statusCode !== 200) {
