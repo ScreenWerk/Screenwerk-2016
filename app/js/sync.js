@@ -28,8 +28,6 @@ module.exports.fetchConfiguration = (_G, callback) => {
     }
     request(options, function(error, response, data) {
 
-      _G.playbackLog.log('Response code for ' + conf_url, response.statusCode)
-
       if (error) {
         console.error('err', error)
         _G.playbackLog.log('Error', error.code)
@@ -38,6 +36,8 @@ module.exports.fetchConfiguration = (_G, callback) => {
         })
         return
       }
+
+      _G.playbackLog.log('Response code for ' + conf_url, response.statusCode)
 
       if (response.statusCode !== 200) {
         console.error('code', response.statusCode)
