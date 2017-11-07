@@ -387,6 +387,8 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
     return callback()
   }
   else if (swMedia.type === _G.codes.MEDIA_TYPE_URL) {
+    let mediaDomElementF = document.createElement('IFRAME')
+    mediaNode.appendChild(mediaDomElementF)
     let mediaDomElement = document.createElement('IFRAME')
     mediaDomElement.src = swMedia.url
     mediaDomElement.scrolling = 'yes'
@@ -399,6 +401,11 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
       mediaDomElement.contentWindow.location.reload()
     }
     mediaDomElement.pause = () => {}
+    
+    setTimeout(function () {
+      mediaNode.removeChild(mediaNode.childNodes[0])
+    }, 1e3)
+    
     return callback()
   }
 }
