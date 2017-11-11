@@ -61,40 +61,12 @@ module.exports = (callback) => {
   
   _G.HOME_PATH = path.resolve(__dirname, '..', '..', 'local')
   enforceDir(_G.HOME_PATH)
-  // if (!fs.existsSync(_G.HOME_PATH)) {
-  //   fs.mkdirSync(_G.HOME_PATH)
-  // }
 
   _G.META_DIR = path.resolve(_G.HOME_PATH)
   enforceDir(_G.META_DIR, cleanup=true)
-  // _G.META_DIR = path.resolve(_G.HOME_PATH, 'sw-meta')
-  // if (!fs.existsSync(_G.META_DIR)) {
-  //   fs.mkdirSync(_G.META_DIR)
-  // }
-  // fs.readdirSync(_G.META_DIR).forEach((downloadFilename) => {
-  //   if (downloadFilename.split('.').pop() !== 'download') { return }
-  //   let downloadFilePath = path.resolve(_G.META_DIR, downloadFilename)
-  //   console.log('Unlink ' + downloadFilePath)
-  //   let result = fs.unlinkSync(downloadFilePath)
-  //   if (result instanceof Error) {
-  //     console.log("Can't unlink " + downloadFilePath, result)
-  //   }
-  // })
 
   _G.MEDIA_DIR = path.resolve(_G.HOME_PATH, 'sw-media')
   enforceDir(_G.MEDIA_DIR, cleanup=true)
-  // if (!fs.existsSync(_G.MEDIA_DIR)) {
-  //   fs.mkdirSync(_G.MEDIA_DIR)
-  // }
-  // fs.readdirSync(_G.MEDIA_DIR).forEach((downloadFilename) => {
-  //   if (downloadFilename.split('.').pop() !== 'download') { return }
-  //   let downloadFilePath = path.resolve(_G.MEDIA_DIR, downloadFilename)
-  //   console.log('Unlink ' + downloadFilePath)
-  //   let result = fs.unlinkSync(downloadFilePath)
-  //   if (result instanceof Error) {
-  //     console.log("Can't unlink " + downloadFilePath, result)
-  //   }
-  // })
 
   _G.checkInternet = function(cb) {
     require('dns').lookup('google.com',function(err) {

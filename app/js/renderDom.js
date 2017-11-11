@@ -389,7 +389,9 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
   }
   else if (swMedia.type === _G.codes.MEDIA_TYPE_URL) {
     let mediaDomElementF = document.createElement('IFRAME')
+    mediaDomElementF.pause = () => {}
     mediaNode.appendChild(mediaDomElementF)
+
     let mediaDomElement = document.createElement('IFRAME')
     mediaDomElement.src = swMedia.url
     mediaDomElement.scrolling = 'yes'
