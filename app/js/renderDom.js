@@ -2,6 +2,7 @@ const async = require('async')
 const fs = require('fs')
 const util = require('util')
 const later = require('later')
+later.date.localTime()
 const path = require('path')
 
 const getOrderedSchedules = (_G, schedules) => {
