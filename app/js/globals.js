@@ -218,7 +218,9 @@ module.exports = (callback) => {
   if (_G.SCREEN_EID) {
     _G.tempConfFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json.download')
     _G.confFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json')
-    callback(null, _G)
+    setTimeout(function () {
+      callback(null, _G)
+    }, 10)
   }
   else {
     let screenEidDiv = document.getElementById('screenEid')
@@ -257,7 +259,9 @@ module.exports = (callback) => {
               _G.tempConfFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json.download')
               _G.confFilePath = path.resolve(_G.META_DIR, _G.SCREEN_EID + '.json')
               writeCredentials(_G)
-              callback(null, _G)
+              setTimeout(function () {
+                callback(null, _G)
+              }, 10)
               screenEidDiv.style.display = 'none'
             }
           })
