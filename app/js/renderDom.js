@@ -390,6 +390,7 @@ const insertMedia = (_G, mediaNode, swMedia, callback) => {
   else if (swMedia.type === _G.codes.MEDIA_TYPE_URL) {
     let mediaDomElementF = document.createElement('IFRAME')
     mediaDomElementF.pause = () => {}
+    mediaDomElementF.play = () => {}
     mediaNode.appendChild(mediaDomElementF)
 
     let mediaDomElement = document.createElement('IFRAME')
