@@ -100,6 +100,7 @@ module.exports.fetchConfiguration = (_G, callback) => {
 }
 
 const loadMedias = (_G, configuration, loadMediasCB) => {
+  _G.playbackLog.log('Entering', 'loadMedias')
   var bytesToSize = (bytes) => {
     var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
     if (bytes === 0) return '0'
@@ -107,6 +108,19 @@ const loadMedias = (_G, configuration, loadMediasCB) => {
     var decimals = Math.max(0, i - 1)
     return (bytes / Math.pow(1024, i)).toFixed(decimals) + ' ' + sizes[i]
   }
+
+  const cleanup_hack = () => {
+    fs.readdirSync(_G.MEDIA_DIR).forEach((mediaFilename) => {
+      var mfpath = path.join(_G.MEDIA_DIR, mediaFilename)
+      if (fs.statSync(mfpath).size < 2000) {
+        _G.playbackLog.log('Dropping too small file ' + mfpath, fs.statSync(mfpath).size)
+        fs.unlink(mfpath, err => {
+          if (err) throw err
+        })
+      }
+    })
+  }
+  cleanup_hack()
 
   const queueConcurrency = 4
   var mediasToLoad = async.queue((task, taskCallback) => {
