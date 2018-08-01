@@ -35,3 +35,4 @@ node_modules
 Screenwerk2016-*
 
 local
+.DS_Store
