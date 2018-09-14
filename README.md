@@ -7,8 +7,9 @@ N/A
 ### Windows
 1. Download source from https://github.com/mitselek/Screenwerk-2016/archive/master.zip
 2. Extract downloaded `master.zip`
-3.1. Download (https://git-scm.com/download/win) and install `Git-****.exe` (In the install dialogue, remove checkbox mark from the __"Enable GIT Credential Manager")__ 
-3.2. Install `node-****.msi` from `installers` folder
+3. Git and Node
+    1. Download (https://git-scm.com/download/win) and install `Git-****.exe` (In the install dialogue, remove checkbox mark from the __"Enable GIT Credential Manager")__ 
+    2. Install `node-****.msi` from `installers` folder
 4. Open CMD in the desired root location
 5. Run `git clone https://github.com/mitselek/Screenwerk-2016.git` from the CMD window (it will create folder named Screenwerk-2016)
 6. Run `cd Screenwerk-2016` from the same CMD window
