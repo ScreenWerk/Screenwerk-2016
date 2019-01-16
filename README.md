@@ -5,12 +5,10 @@
 N/A
 
 ### Windows
-1. Download source from https://github.com/mitselek/Screenwerk-2016/archive/master.zip
-2. Extract downloaded `master.zip`
-3. Git and Node
+1. Git and Node
     1. Download (https://git-scm.com/download/win) and install `Git-****.exe` (In the install dialogue, remove checkbox mark from the __"Enable GIT Credential Manager")__ 
-    2. Install `node-****.msi` from `installers` folder
-4. Open CMD in the desired root location
+    2. Nodejs download link (https://nodejs.org/en/) and select recommended release. Then install the `node-****.msi` from the directory where it was downloaded.
+4. Open CMD in the desired root location (For example, in the C: drive)
 5. Run `git clone https://github.com/mitselek/Screenwerk-2016.git` from the CMD window (it will create folder named Screenwerk-2016)
 6. Run `cd Screenwerk-2016` from the same CMD window
 7. Run `npm install` from the same CMD window (you have to be in the Screenwerk-2016 folder)
