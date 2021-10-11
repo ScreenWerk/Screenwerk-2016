@@ -24,7 +24,8 @@ module.exports.fetchConfiguration = (_G, callback) => {
     console.log(_G.packageJson.productName + ' ' + _G.packageJson.version + '@' + _G.gitBranch)
     let options = {
       headers: { 'User-Agent': _G.packageJson.productName + ' ' + _G.packageJson.version + '@' + _G.gitBranch },
-      uri: conf_url
+      uri: conf_url, 
+      rejectUnauthorized: false
     }
     request(options, function(error, response, data) {
 

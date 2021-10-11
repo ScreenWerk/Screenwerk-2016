@@ -206,7 +206,9 @@ module.exports = (callback) => {
           screenEidResult.innerHTML = 'Looking up ' + screenEidInput.value + '.json' + ' ...'
 
           let responseData = ''
-          request(_G.SCREENWERK_API + screenEidInput.value + '.json')
+          let sw_url = _G.SCREENWERK_API + screenEidInput.value + '.json'
+          console.log('Requesting', sw_url)
+          request({url: sw_url, rejectUnauthorized: false})
           .on('response', (res) => {
             if (res.statusCode !== 200) {
               screenEidResult.innerHTML = JSON.stringify({not200:res}, null, 4)
