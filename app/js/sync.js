@@ -3,6 +3,7 @@ const path = require('path')
 const request = require('request')
 const fs = require('fs')
 const util = require('util')
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
 module.exports.fetchConfiguration = (_G, callback) => {
   _G.playbackLog.log('= = = ENTER fetchConfiguration')
