@@ -35,7 +35,7 @@ fs.readdirSync(path.resolve(__dirname, '..', 'local')).forEach((filename) => {
 })
 // ... and create my own
 let pidFilePath = path.resolve(__dirname, '..', 'local', '.' + process.pid + '.pid')
-fs.writeFileSync(pidFilePath, process.pid, 'utf8')
+fs.writeFileSync(pidFilePath, process.pid.toString(), 'utf8')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
