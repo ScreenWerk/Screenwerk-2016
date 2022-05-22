@@ -4,7 +4,7 @@
 const path = require('path')
 const fs = require('fs')
 const util = require('util')
-const app = require('electron').remote.app
+const { app } = require("electron");
 
 console.log('Starting screenwerk.js')
 require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Paths, screenEid, etc.
