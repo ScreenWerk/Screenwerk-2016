@@ -8,7 +8,7 @@ const { app } = require("electron");
 
 console.log('Starting screenwerk.js')
 require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Paths, screenEid, etc.
-  console.log('Globals loaded')
+  console.log('Globals loaded', err, _G)
   const sync = require(path.resolve(__dirname, 'sync.js'))
 
   // Gets executed only on program start.
@@ -49,7 +49,7 @@ require(path.resolve(__dirname, 'globals.js'))( (err, _G) => {  // Globals. Path
   let IS_CONFIGURATION_FILE_OK = false
   readConfiguration(_G, (code, jsonData) => {
     if (IS_CONFIGURATION_FILE_OK) {
-      _G.playbackLog('Callback allready called', '[WARNING]')
+      _G.playbackLog.log('Callback allready called', '[WARNING]')
       return
     }
     _G.playbackLog.log(code)
