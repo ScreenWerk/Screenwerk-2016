@@ -69,7 +69,13 @@ function createWindow () {
   displayNum --
   let display = displays[displayNum]
 
-  mainWindow = new BrowserWindow({ x: display.bounds.x, y: display.bounds.y, width: 900, height: 600 })
+  mainWindow = new BrowserWindow({ 
+    x: display.bounds.x, 
+    y: display.bounds.y, 
+    width: 900, height: 600,
+    nodeIntegration: true,
+    contextIsolation: false 
+  })
   mainWindow.setMenu(null)
   if (devMode) {
     mainWindow.setFullScreen(false)
