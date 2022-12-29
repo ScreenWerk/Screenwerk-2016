@@ -74,7 +74,8 @@ function createWindow () {
     y: display.bounds.y, 
     width: 900, height: 600,
     nodeIntegration: true,
-    contextIsolation: false 
+    contextIsolation: false,
+    webPreferences: {nodeIntegration: true, contextIsolation: false}
   })
   mainWindow.setMenu(null)
   if (devMode) {
